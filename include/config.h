@@ -1,3 +1,3 @@
 #pragma once
 
-#define NAME "TODO:"
+#define NAME "board-hex-leds"

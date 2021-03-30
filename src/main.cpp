@@ -1,7 +1,9 @@
 #include <ArduinoOTA.h>
 #include <Arduino.h>
 #include <config.h>
+#include <api.h>
 #include <telnet.h>
+#include <leds.h>
 #include <ota.h>
 #include <net.h>
 
@@ -19,7 +21,9 @@ void setup() {
 	LOGN("Stopped waiting");
 
 	// Setup the rest
-	// TODO:
+	Net::setup();
+	API::setup();
+	Leds::setup();
 
 	// Done
 	LOGN("Booted");
@@ -28,6 +32,6 @@ void setup() {
 void loop() {
 	OTA::loop();
 	Telnet::loop();
-	
-	//TODO:
+	API::loop();
+	Leds::loop();
 }

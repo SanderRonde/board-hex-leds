@@ -1,0 +1,7 @@
+.pio
+
+ota_secrets.h
+net_secrets.h
+secrets.h
+
+.vscode

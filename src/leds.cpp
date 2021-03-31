@@ -1,12 +1,13 @@
 #include <leds.h>
 #include <FastLED.h>
 
-CRGB leds[NUM_LEDS] = {CRGB::Black};
 CRGB colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple};
 const int NUM_COLORS = sizeof(colors) / sizeof(CRGB);
 
 namespace Leds
 {
+	CRGB leds[NUM_LEDS] = {CRGB::Black};
+
 	void setup()
 	{
 		FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS, 0);

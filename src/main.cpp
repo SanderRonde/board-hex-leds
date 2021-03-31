@@ -6,6 +6,7 @@
 #include <leds.h>
 #include <ota.h>
 #include <net.h>
+#include <hex.h>
 
 void setup() {
 	Serial.begin(115200);
@@ -24,6 +25,7 @@ void setup() {
 	Net::setup();
 	API::setup();
 	Leds::setup();
+	HexNS::setup();
 
 	// Done
 	LOGN("Booted");

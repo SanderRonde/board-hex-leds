@@ -1,8 +1,9 @@
 #pragma once
 
 #include <Arduino.h>
-#include <FastLed.h>
+#include <FastLED.h>
 
+// We say D5 but in actuality the magic happens on pin 5
 #define LED_PIN D1
 #define LEDS_PER_M 60
 #define METERS_PER_STRIP 5
@@ -10,9 +11,9 @@
 #define STRIPS 1
 #define NUM_LEDS (LEDS_PER_STRIP * STRIPS)
 
-extern CRGB leds[NUM_LEDS];
-
 namespace Leds {
+	extern CRGB leds[NUM_LEDS];
+
 	void setup();
 
 	void loop();

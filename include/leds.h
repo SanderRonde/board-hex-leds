@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-// We say D5 but in actuality the magic happens on pin 5
+// We say D1 but in actuality the magic happens on pin 5
 #define LED_PIN D1
 #define LEDS_PER_M 60
 #define METERS_PER_STRIP 5

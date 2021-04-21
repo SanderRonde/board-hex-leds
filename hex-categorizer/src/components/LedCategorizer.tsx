@@ -36,6 +36,7 @@ export function LedCategorizer(props: { hexes: HexCls[] }) {
                 hex.save();
                 setLedIdx(ledIdx + 1);
                 await turnOffLed(ledIdx);
+                await turnOnLed(ledIdx + 1);
             })
     );
 

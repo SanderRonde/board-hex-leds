@@ -14,6 +14,7 @@
 #define MAX_MOVE_TARGET_ITERATIONS 1000
 #define PEAK_BRIGHTNESS_CENTER_DISTANCE 1
 #define LOWEST_BRIGTHENESS_CENTER_DISTANCE 2
+#define RAINBOW_STEP 30
 
 namespace Effects
 {
@@ -80,6 +81,41 @@ namespace Effects
 					{
 						hex->set_at_index(j, CHSV(total_step, 255, 255));
 					}
+				}
+
+				FastLED.show();
+			}
+		}
+
+		namespace EdgeRainbow
+		{
+			long long last_iteration;
+			double revolve_step;
+			double offset;
+			int num_hexes;
+
+			void setup(int _revolve_time)
+			{
+				revolve_step = (double)255 / _revolve_time;
+				last_iteration = 0;
+				offset = 0;
+			}
+
+			void loop()
+			{
+				long long time_diff = millis() - last_iteration;
+				double added_offset = (double)time_diff * revolve_step;
+				offset = std::fmod(offset + added_offset, MAX_CSHV_VALUE);
+				last_iteration = millis();
+
+				int rounded_offset = (int)round(offset);
+
+				int total_offset = rounded_offset;
+				for (int i = 0; i < NUM_LEDS; i++)
+				{
+					Leds::leds[i] = CHSV(total_offset, 255, 255);
+
+					total_offset = (total_offset + RAINBOW_STEP) % MAX_CSHV_VALUE;
 				}
 
 				FastLED.show();
@@ -470,11 +506,18 @@ namespace Effects
 			FastLED.show();
 		}
 
-		void enable_rainbow(String revolve_time)
+		void enable_rainbow(int revolve_time)
 		{
-			Animations::Rainbow::setup(atoi(revolve_time.c_str()));
+			Animations::Rainbow::setup(revolve_time);
 			animating = true;
 			animation_fn = Animations::Rainbow::loop;
+		}
+
+		void enable_edge_rainbow(int revolve_time)
+		{
+			Animations::EdgeRainbow::setup(revolve_time);
+			animating = true;
+			animation_fn = Animations::EdgeRainbow::loop;
 		}
 
 		void set_all(String str_color)
@@ -494,16 +537,16 @@ namespace Effects
 			animation_fn = Animations::MoveAround::loop;
 		}
 
-		void random_colors_gradual(String wait_time)
+		void random_colors_gradual(int wait_time)
 		{
-			Animations::RandomColorsGradual::setup(atoi(wait_time.c_str()));
+			Animations::RandomColorsGradual::setup(wait_time);
 			animating = true;
 			animation_fn = Animations::RandomColorsGradual::loop;
 		}
 
-		void random_colors(String wait_time)
+		void random_colors(int wait_time)
 		{
-			Animations::RandomColors::setup(atoi(wait_time.c_str()));
+			Animations::RandomColors::setup(wait_time);
 			animating = true;
 			animation_fn = Animations::RandomColors::loop;
 		}

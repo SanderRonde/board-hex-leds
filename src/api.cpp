@@ -11,22 +11,31 @@ namespace API
 {
 	ESP8266WebServer server(80);
 
-	inline void respond_succes() {
+	inline void respond_succes()
+	{
 		server.send(200, "text/json", "{\"success\": true}");
+	}
+
+	inline void log_request()
+	{
+		LOGF("Got request for URI: %s\n", server.uri().c_str());
 	}
 
 	void handle_root()
 	{
+		log_request();
 		server.send(200, "text/plain", "Hi!");
 	}
 
 	void handle_not_found()
 	{
+		log_request();
 		server.send(404, "text/plain", "404: Not found");
 	}
 
 	void handle_set_led()
 	{
+		log_request();
 		if (!server.hasArg("num") ||
 				(!server.hasArg("color") && !server.hasArg("power")))
 		{
@@ -42,12 +51,13 @@ namespace API
 		{
 			Effects::Effects::set_led(server.arg("num"), server.arg("color"));
 		}
-		
+
 		respond_succes();
 	}
 
 	void handle_set_led_in_hex()
 	{
+		log_request();
 		if (!server.hasArg("index") || !server.hasArg("hex_id") ||
 				(!server.hasArg("color") && !server.hasArg("power")))
 		{
@@ -69,6 +79,7 @@ namespace API
 
 	void handle_set_hex()
 	{
+		log_request();
 		if (!server.hasArg("hex_id") ||
 				(!server.hasArg("color") && !server.hasArg("power")))
 		{
@@ -90,6 +101,7 @@ namespace API
 
 	void handle_set_all()
 	{
+		log_request();
 		if ((!server.hasArg("color") && !server.hasArg("power")))
 		{
 			server.send(400, "text/plain", "400: Invalid reiquest");
@@ -110,6 +122,7 @@ namespace API
 
 	void handle_set_rainbow()
 	{
+		log_request();
 		int revolve_time = DEFAULT_REVOLVE_TIME;
 		if (server.hasArg("revolve_time"))
 		{
@@ -122,8 +135,9 @@ namespace API
 		respond_succes();
 	}
 
-		void handle_set_edge_rainbow()
+	void handle_set_edge_rainbow()
 	{
+		log_request();
 		int revolve_time = DEFAULT_REVOLVE_TIME;
 		if (server.hasArg("revolve_time"))
 		{
@@ -138,6 +152,7 @@ namespace API
 
 	void handle_set_move()
 	{
+		log_request();
 		Effects::Effects::move_around();
 
 		respond_succes();
@@ -145,6 +160,7 @@ namespace API
 
 	void handle_set_random_colors_gradual()
 	{
+		log_request();
 		int wait_time = DEFAULT_RANDOM_COLORS_GRADUAL_WAIT_TIME;
 		if (server.hasArg("wait_time"))
 		{
@@ -159,6 +175,7 @@ namespace API
 
 	void handle_set_random_colors()
 	{
+		log_request();
 		int wait_time = DEFAULT_RANDOM_COLORS_WAIT_TIME;
 		if (server.hasArg("wait_time"))
 		{
@@ -184,7 +201,7 @@ namespace API
 		server.on("/effects/edge_rainbow", HTTP_POST, handle_set_edge_rainbow);
 		server.on("/effects/move", HTTP_POST, handle_set_move);
 		server.on("/effects/random_colors_gradual", HTTP_POST, handle_set_random_colors_gradual);
-		server.on("/effets/random_colors", HTTP_POST, handle_set_random_colors);
+		server.on("/effects/random_colors", HTTP_POST, handle_set_random_colors);
 		server.onNotFound(handle_not_found);
 
 		LOGF("Server listening on port %d\n", SERVER_PORT);

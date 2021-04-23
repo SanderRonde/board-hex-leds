@@ -1,13 +1,19 @@
 #include <net.h>
 #include <effects.h>
+#include <telnet.h>
 
 #define DEFAULT_REVOLVE_TIME 10000
 #define DEFAULT_RANDOM_COLORS_GRADUAL_WAIT_TIME 1000
 #define DEFAULT_RANDOM_COLORS_WAIT_TIME 1000
+#define SERVER_PORT 80
 
 namespace API
 {
 	ESP8266WebServer server(80);
+
+	inline void respond_succes() {
+		server.send(200, "text/json", "{\"success\": true}");
+	}
 
 	void handle_root()
 	{
@@ -36,6 +42,8 @@ namespace API
 		{
 			Effects::Effects::set_led(server.arg("num"), server.arg("color"));
 		}
+		
+		respond_succes();
 	}
 
 	void handle_set_led_in_hex()
@@ -55,6 +63,8 @@ namespace API
 		{
 			Effects::Effects::set_led_in_hex(server.arg("index"), server.arg("hex_id"), server.arg("color"));
 		}
+
+		respond_succes();
 	}
 
 	void handle_set_hex()
@@ -74,6 +84,8 @@ namespace API
 		{
 			Effects::Effects::set_hex(server.arg("hex_id"), server.arg("color"));
 		}
+
+		respond_succes();
 	}
 
 	void handle_set_all()
@@ -92,6 +104,8 @@ namespace API
 		{
 			Effects::Effects::set_all(server.arg("color"));
 		}
+
+		respond_succes();
 	}
 
 	void handle_set_rainbow()
@@ -104,6 +118,8 @@ namespace API
 		}
 
 		Effects::Effects::enable_rainbow(revolve_time);
+
+		respond_succes();
 	}
 
 		void handle_set_edge_rainbow()
@@ -116,11 +132,15 @@ namespace API
 		}
 
 		Effects::Effects::enable_edge_rainbow(revolve_time);
+
+		respond_succes();
 	}
 
 	void handle_set_move()
 	{
 		Effects::Effects::move_around();
+
+		respond_succes();
 	}
 
 	void handle_set_random_colors_gradual()
@@ -133,6 +153,8 @@ namespace API
 		}
 
 		Effects::Effects::random_colors_gradual(wait_time);
+
+		respond_succes();
 	}
 
 	void handle_set_random_colors()
@@ -145,11 +167,14 @@ namespace API
 		}
 
 		Effects::Effects::random_colors(wait_time);
+
+		respond_succes();
 	}
 
 	void setup()
 	{
 
+		server.begin(SERVER_PORT);
 		server.on("/", HTTP_GET, handle_root);
 		server.on("/set_led_in_hex", HTTP_POST, handle_set_led_in_hex);
 		server.on("/set_led", HTTP_POST, handle_set_led);
@@ -161,6 +186,8 @@ namespace API
 		server.on("/effects/random_colors_gradual", HTTP_POST, handle_set_random_colors_gradual);
 		server.on("/effets/random_colors", HTTP_POST, handle_set_random_colors);
 		server.onNotFound(handle_not_found);
+
+		LOGF("Server listening on port %d\n", SERVER_PORT);
 	}
 
 	void loop()

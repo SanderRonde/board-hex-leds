@@ -37,23 +37,23 @@ HexNS::Hexes *HexNS::Hexes::from_json(String json)
 	if (error)
 	{
 		LOGF("Failed to deserialize JSON: %s\n", error.f_str());
-		return;
+		return NULL;
 	}
 
 	JsonArray json_hexes = doc["hexes"];
 	size_t num_hexes = json_hexes.size();
 
 	Hex **created_hexes = (Hex **)malloc(sizeof(Hex *) * num_hexes);
-	for (int i = 0; i < num_hexes; i++)
+	for (size_t i = 0; i < num_hexes; i++)
 	{
 		created_hexes[i] = Hex::from_json(json_hexes[i]);
 	}
 
-	Hexes hexes_cls = Hexes(created_hexes, num_hexes);
-	for (int i = 0; i < num_hexes; i++)
+	Hexes* hexes_cls = new Hexes(created_hexes, num_hexes);
+	for (size_t i = 0; i < num_hexes; i++)
 	{
-		(*created_hexes[i]).parent = &hexes_cls;
+		(*created_hexes[i]).parent = hexes_cls;
 	}
 
-	return &hexes_cls;
+	return hexes_cls;
 }

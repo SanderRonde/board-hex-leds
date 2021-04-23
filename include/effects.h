@@ -20,4 +20,6 @@ namespace Effects
 
 		void random_colors(int wait_time);
 	}
+	
+	void loop();
 }

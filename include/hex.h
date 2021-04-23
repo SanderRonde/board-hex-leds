@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef HEXES_H
+#define HEXES_H
+
 #include <ArduinoJson.h>
 #include <FastLED.h>
 
@@ -24,7 +27,7 @@ namespace HexNS
 	class Hex
 	{
 	public:
-		Hexes *parent;
+		void *parent;
 		int id;
 		int num_leds;
 
@@ -62,7 +65,7 @@ namespace HexNS
 		Hexes *hexes = NULL;
 		int num_hexes;
 
-		static Hexes *Hexes::from_json(String json);
+		static Hexes *from_json(String json);
 
 	private:
 		Hex **_hexes;
@@ -70,5 +73,7 @@ namespace HexNS
 
 	void setup();
 
-	Hexes *hexes;
+	extern Hexes *hexes;
 };
+
+#endif

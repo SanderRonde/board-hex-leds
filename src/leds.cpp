@@ -14,14 +14,17 @@ namespace Leds
 	}
 
 	int offset = 0;
+	int big_offset = 0;
 	void loop()
 	{
-		int color_idx = offset++ % NUM_COLORS;
+		offset++;
+
+		int local_offset = offset;
 		for (int i = 0; i < NUM_LEDS; i++)
 		{
-			leds[i] = colors[color_idx];
+			leds[i] = CHSV(local_offset % 256, 255, 255);
 
-			color_idx = (++color_idx) % NUM_COLORS;
+			local_offset += 1;
 		}
 
 		FastLED.show();

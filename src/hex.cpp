@@ -13,5 +13,7 @@ namespace HexNS
 		String result = Net::req("192.168.1.86", 1234, "/hexes.json");
 		hexes = Hexes::from_json(result);
 	}
+
+	Hexes *hexes;
 };
 

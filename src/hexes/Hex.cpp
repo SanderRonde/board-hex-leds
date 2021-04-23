@@ -45,23 +45,23 @@ HexNS::Hex *HexNS::Hex::from_json(JsonObject hex_json)
 	size_t num_leds = leds_json.size();
 
 	int *borders = (int *)malloc(sizeof(int) * borders_json.size());
-	for (int i = 0; i < borders_json.size(); i++)
+	for (size_t i = 0; i < borders_json.size(); i++)
 	{
 		borders[i] = borders_json[i];
 	}
 	int *leds = (int *)malloc(sizeof(int) * leds_json.size());
-	for (int i = 0; i < leds_json.size(); i++)
+	for (size_t i = 0; i < leds_json.size(); i++)
 	{
 		leds[i] = leds_json[i];
 	}
 
-	HexNS::Hex hex = HexNS::Hex(id, num_leds, leds, borders);
-	return &hex;
+	HexNS::Hex* hex = new HexNS::Hex(id, num_leds, leds, borders);
+	return hex;
 }
 
 HexNS::Hex *HexNS::Hex::get_neighbour(HexNS::hex_side_t side)
 {
-	return parent->get_by_id(side);
+	return ((HexNS::Hexes *)parent)->get_by_id(side);
 }
 
 /**

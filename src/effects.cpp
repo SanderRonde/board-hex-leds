@@ -376,7 +376,7 @@ namespace Effects
 			uint8_t nblendU8TowardU8(uint8_t cur, const uint8_t target, uint8_t amount)
 			{
 				if (cur == target)
-					return;
+					return cur;
 
 				if (cur < target)
 				{

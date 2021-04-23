@@ -5,3 +5,5 @@ net_secrets.h
 secrets.h
 
 .vscode
+
+**/node_modules

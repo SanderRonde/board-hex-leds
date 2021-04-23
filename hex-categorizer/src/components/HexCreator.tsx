@@ -8,7 +8,7 @@ export interface HexType {
     leds: number[];
 }
 
-const DEFAULT_HEXES: HexType[] = [
+export const DEFAULT_HEXES: HexType[] = [
     {
         id: 1,
         borders: [-1, 3, 4, 2, -1, -1],
@@ -61,17 +61,29 @@ const DEFAULT_HEXES: HexType[] = [
     },
 ];
 
+export class HexGetter {
+    constructor(public id: number) {}
+
+    get hex(): HexCls {
+        return HexCls.classesByIds.get(this.id)!;
+    }
+}
+
 export class HexCls {
     static classesByIds: Map<number, HexCls> = new Map();
 
-    static store() {
+    static store(updateStoredData: (data: string) => void) {
         const hexes = Array.from(this.classesByIds.values()).map((h) =>
             h.toJSON()
         );
+        updateStoredData(JSON.stringify(hexes));
         localStorage.setItem("hexes", JSON.stringify(hexes));
     }
 
-    constructor(private _hexType: HexType) {
+    constructor(
+        private _hexType: HexType,
+        private _updateStoredData: (data: string) => void
+    ) {
         HexCls.classesByIds.set(_hexType.id, this);
     }
 
@@ -85,6 +97,10 @@ export class HexCls {
 
     get leds() {
         return this._hexType.leds;
+    }
+
+    set leds(ledArr: number[]) {
+        this._hexType.leds = ledArr;
     }
 
     get id() {
@@ -121,17 +137,23 @@ export class HexCls {
 
     onClicked: () => void = () => {};
 
-	save() {
-		HexCls.store();
-	}
+    onOrdering: () => void = () => {};
+
+    save() {
+        HexCls.classesByIds.set(this.id, this);
+        HexCls.store(this._updateStoredData);
+    }
 }
 
-export function HexCreator() {
-    const [hexes, _] = React.useState<HexCls[]>(
+export function HexCreator(props: {
+    isOrderer: boolean;
+    updateStoredData: (data: string) => void;
+}) {
+    const [hexes] = React.useState<HexCls[]>(
         (localStorage.getItem("hexes")
             ? (JSON.parse(localStorage.getItem("hexes")!) as HexType[])
             : DEFAULT_HEXES
-        ).map((h) => new HexCls(h))
+        ).map((h) => new HexCls(h, props.updateStoredData))
     );
 
     const rows: HexCls[][] = [[]];
@@ -173,7 +195,11 @@ export function HexCreator() {
                                 }}
                             >
                                 {row.map((item) => (
-                                    <Hex hex={item} key={item.id} />
+                                    <Hex
+                                        isOrderer={props.isOrderer}
+                                        hexGetter={new HexGetter(item.id)}
+                                        key={item.id}
+                                    />
                                 ))}
                             </div>
                         );
@@ -181,7 +207,10 @@ export function HexCreator() {
                 </div>
             </div>
 
-            <LedCategorizer hexes={hexes} />
+            <LedCategorizer
+                isOrderer={props.isOrderer}
+                hexGetters={hexes.map((hex) => new HexGetter(hex.id))}
+            />
         </span>
     );
 }

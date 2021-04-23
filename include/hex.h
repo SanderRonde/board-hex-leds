@@ -12,6 +12,13 @@
 #define FULL_ROTATION_ANGLE 360
 #define ANGLE_PER_SIDE (FULL_ROTATION_ANGLE / HEX_SIDES)
 
+typedef struct hex_describer
+{
+	int id;
+	int borders[HEX_SIDES];
+	int leds[35];
+} hex_describer_t;
+
 namespace HexNS
 {
 	typedef enum HEX_SIDE
@@ -31,7 +38,7 @@ namespace HexNS
 		int id;
 		int num_leds;
 
-		Hex(int _id, int _num_leds, int *led_indices, int sides[HEX_SIDES]);
+		Hex(hex_describer_t described_hex);
 		~Hex();
 
 		int operator[](int index);
@@ -39,8 +46,6 @@ namespace HexNS
 		void set_at_index(int index, CRGB color);
 		void set_color(CRGB color);
 		int get_angle_at_index(int index);
-
-		static Hex *from_json(JsonObject hex_json);
 
 		Hex *get_neighbour(hex_side_t side);
 
@@ -65,7 +70,7 @@ namespace HexNS
 		Hexes *hexes = NULL;
 		int num_hexes;
 
-		static Hexes *from_json(unsigned char *json_str, unsigned int json_str_len);
+		static Hexes *from_described(const hex_describer_t hexes[], size_t num_hexes);
 
 	private:
 		Hex **_hexes;

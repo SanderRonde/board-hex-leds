@@ -27,8 +27,8 @@ namespace Effects
 
 		const char *color_c_str = color.c_str();
 		strncpy(red, color_c_str + 1, 2);
-		strncpy(green, color_c_str + 3, 4);
-		strncpy(blue, color_c_str + 5, 6);
+		strncpy(green, color_c_str + 3, 2);
+		strncpy(blue, color_c_str + 5, 2);
 		red[2] = green[2] = blue[2] = '\n';
 		color_obj.r = strtol(red, NULL, 16);
 		color_obj.g = strtol(green, NULL, 16);

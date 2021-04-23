@@ -1,13 +1,18 @@
 #include <hex.h>
 #include <leds.h>
 
-HexNS::Hex::Hex(int _id, int _num_leds, int *led_indices, int sides[HEX_SIDES])
+HexNS::Hex::Hex(hex_describer_t described_hex)
 {
-	id = _id;
-	num_leds = _num_leds;
+	id = described_hex.id;
+
+	num_leds = 0;
+	for (int i = 0; described_hex.leds[i] != -1; i++, num_leds++)
+	{
+	}
+
 	_led_indices = (int *)malloc(sizeof(int) * num_leds);
-	memcpy(_led_indices, led_indices, sizeof(int) * num_leds);
-	memcpy(_sides, sides, sizeof(int) * HEX_SIDES);
+	memcpy(_led_indices, described_hex.leds, sizeof(int) * num_leds);
+	memcpy(_sides, described_hex.borders, sizeof(int) * HEX_SIDES);
 }
 HexNS::Hex::~Hex()
 {
@@ -36,28 +41,6 @@ void HexNS::Hex::set_color(CRGB color)
 		Leds::leds[_led_indices[i]] = color;
 	}
 };
-
-HexNS::Hex *HexNS::Hex::from_json(JsonObject hex_json)
-{
-	int id = hex_json["id"];
-	JsonArray borders_json = hex_json["borders"];
-	JsonArray leds_json = hex_json["leds"];
-	size_t num_leds = leds_json.size();
-
-	int *borders = (int *)malloc(sizeof(int) * borders_json.size());
-	for (size_t i = 0; i < borders_json.size(); i++)
-	{
-		borders[i] = borders_json[i];
-	}
-	int *leds = (int *)malloc(sizeof(int) * leds_json.size());
-	for (size_t i = 0; i < leds_json.size(); i++)
-	{
-		leds[i] = leds_json[i];
-	}
-
-	HexNS::Hex* hex = new HexNS::Hex(id, num_leds, leds, borders);
-	return hex;
-}
 
 HexNS::Hex *HexNS::Hex::get_neighbour(HexNS::hex_side_t side)
 {

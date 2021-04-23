@@ -1,5 +1,35 @@
 #include <hex.h>
 #include <leds.h>
+#include <telnet.h>
+
+template <class T>
+void reverse_arr(T *arr, int arr_len)
+{
+	for (int i = 0; i < floor((double)arr_len / 2); i++)
+	{
+		T temp = arr[i];
+		int end_index = arr_len - (i + 1);
+		arr[i] = arr[end_index];
+		arr[end_index] = temp;
+	}
+}
+
+template <class T>
+void shift_array_once(T* arr, int arr_len) {
+	T last_item = arr[arr_len - 1];
+	for (int i = 0; i < arr_len; i++) {
+		T temp = arr[i];
+		arr[i] = last_item;
+		last_item = temp;
+	}
+}
+
+template <class T>
+void shift_array(T* arr, int arr_len, int shift_amount) {
+	for (int i = 0; i < shift_amount; i++) {
+		shift_array_once<T>(arr, arr_len);
+	}
+}
 
 HexNS::Hex::Hex(hex_describer_t described_hex)
 {
@@ -12,6 +42,14 @@ HexNS::Hex::Hex(hex_describer_t described_hex)
 
 	_led_indices = (int *)malloc(sizeof(int) * num_leds);
 	memcpy(_led_indices, described_hex.leds, sizeof(int) * num_leds);
+	if (described_hex.invert_order)
+	{
+		reverse_arr<int>(_led_indices, num_leds);
+	}
+	if (described_hex.offset_percentage) {
+		int offset_flat_amount = round(num_leds * (double) described_hex.offset_percentage / 100);
+		shift_array<int>(_led_indices, num_leds, offset_flat_amount);
+	}
 	memcpy(_sides, described_hex.borders, sizeof(int) * HEX_SIDES);
 }
 HexNS::Hex::~Hex()

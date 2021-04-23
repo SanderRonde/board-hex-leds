@@ -15,6 +15,8 @@
 typedef struct hex_describer
 {
 	int id;
+	int offset_percentage;
+	bool invert_order;
 	int borders[HEX_SIDES];
 	int leds[35];
 } hex_describer_t;

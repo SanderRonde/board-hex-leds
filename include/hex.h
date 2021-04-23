@@ -65,7 +65,7 @@ namespace HexNS
 		Hexes *hexes = NULL;
 		int num_hexes;
 
-		static Hexes *from_json(String json);
+		static Hexes *from_json(unsigned char *json_str, unsigned int json_str_len);
 
 	private:
 		Hex **_hexes;

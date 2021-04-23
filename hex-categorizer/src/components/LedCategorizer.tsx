@@ -1,13 +1,22 @@
-import { HexCls } from "./HexCreator";
+import { HexCls, HexGetter } from "./HexCreator";
 import * as React from "react";
 
-export function LedCategorizer(props: { hexes: HexCls[] }) {
+export function LedCategorizer(props: {
+    hexGetters: HexGetter[];
+    isOrderer: boolean;
+}) {
     const highestLed = Math.max(
-        ...props.hexes.map((hex) => Math.max(...hex.leds))
+        ...props.hexGetters.map((hexGeter) => Math.max(...hexGeter.hex.leds))
     );
     const [ledIdx, setLedIdx] = React.useState<number>(
-        Number.isFinite(highestLed) ? highestLed + 1 : 0
+        props.isOrderer ? 0 : Number.isFinite(highestLed) ? highestLed + 1 : 0
     );
+
+    const [
+        currentHexGetter,
+        setCurrentHexGetter,
+    ] = React.useState<HexGetter | null>(null);
+    const [currentList, setCurrentList] = React.useState<number[]>([]);
 
     const turnOffLed = async (ledNumber: number) => {
         await fetch(
@@ -29,16 +38,81 @@ export function LedCategorizer(props: { hexes: HexCls[] }) {
         );
     };
 
-    props.hexes.forEach(
-        (hex) =>
-            (hex.onClicked = async () => {
-                hex.leds.push(ledIdx);
-                hex.save();
+    props.hexGetters.forEach(
+        (hexGetter) =>
+            (hexGetter.hex.onClicked = async () => {
+                hexGetter.hex.leds.push(ledIdx);
+                hexGetter.hex.save();
                 setLedIdx(ledIdx + 1);
                 await turnOffLed(ledIdx);
                 await turnOnLed(ledIdx + 1);
             })
     );
+
+    props.hexGetters.forEach(
+        (hexGetter) =>
+            (hexGetter.hex.onOrdering = async () => {
+                setCurrentHexGetter(hexGetter);
+
+                setLedIdx(hexGetter.hex.leds[0]);
+                setCurrentList([]);
+                await turnOnLed(hexGetter.hex.leds[0]);
+            })
+    );
+
+    const nextLed = async () => {
+        const totalSet = currentHexGetter!.hex.leds;
+        const availableLeds = totalSet.filter((i) => !currentList.includes(i));
+        const currentIdx = availableLeds.indexOf(ledIdx);
+        let newIdx = (currentIdx + 1) % availableLeds.length;
+        if (availableLeds.length === 1) {
+            newIdx = 0;
+        }
+        setLedIdx(availableLeds[newIdx]);
+
+        await turnOffLed(ledIdx);
+        await turnOnLed(availableLeds[newIdx]);
+    };
+
+    const prevLed = async () => {
+        const totalSet = currentHexGetter!.hex.leds;
+        const availableLeds = totalSet.filter((i) => !currentList.includes(i));
+        const currentIdx = availableLeds.indexOf(ledIdx);
+        let newIdx =
+            (currentIdx + availableLeds.length - 1) % availableLeds.length;
+
+        if (availableLeds.length === 1) {
+            newIdx = 0;
+        }
+        setLedIdx(availableLeds[newIdx]);
+
+        await turnOffLed(ledIdx);
+        await turnOnLed(availableLeds[newIdx]);
+    };
+
+    const pushLed = () => {
+        prevLed();
+        currentList.push(ledIdx);
+
+        if (currentList.length === currentHexGetter?.hex.leds.length) {
+            currentHexGetter.hex.leds = currentList;
+            currentHexGetter.hex.save();
+
+            alert("Done!");
+
+            setCurrentList([]);
+        }
+    };
+
+    window.onkeydown = (e: KeyboardEvent) => {
+        if (e.key === "ArrowLeft") {
+            prevLed();
+        } else if (e.key === "ArrowRight") {
+            nextLed();
+        } else if (e.key === " ") {
+            pushLed();
+        }
+    };
 
     return (
         <div>
@@ -47,6 +121,19 @@ export function LedCategorizer(props: { hexes: HexCls[] }) {
             <br />
             <button onClick={() => turnOnLed(ledIdx)}>Turn on</button>
             <button onClick={() => turnOffLed(ledIdx)}>Turn off</button>
+            {props.isOrderer && (
+                <span>
+                    <br />
+                    <br />
+                    <button onClick={() => prevLed()}>Prev LED</button>
+                    <button onClick={() => nextLed()}>Next LED</button>
+                    <br />
+                    <br />
+                    Current list: {currentList.map((i) => i).join(",")}
+                    <br />
+                    <button onClick={() => pushLed()}>Push to list</button>
+                </span>
+            )}
         </div>
     );
 }

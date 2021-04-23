@@ -1,14 +1,25 @@
 import React from "react";
-import { HexCls } from "./HexCreator";
+import { HexGetter } from "./HexCreator";
 
-export function Hex(props: { hex: HexCls }) {
+export function Hex(props: { hexGetter: HexGetter; isOrderer: boolean }) {
     const [hovered, setHover] = React.useState<boolean>(false);
 
     return (
         <div
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            onClick={() => props.hex.onClicked()}
+            onMouseEnter={() => !props.isOrderer && setHover(true)}
+            onMouseLeave={() => !props.isOrderer && setHover(false)}
+            onClick={() => {
+                if (props.isOrderer) {
+                    if (hovered) {
+                        setHover(false);
+                    } else {
+                        setHover(true);
+                        props.hexGetter.hex.onOrdering();
+                    }
+                } else {
+                    props.hexGetter.hex.onClicked();
+                }
+            }}
             style={{
                 border: "1px solid black",
                 width: "100px",
@@ -22,7 +33,7 @@ export function Hex(props: { hex: HexCls }) {
                 backgroundColor: hovered ? "grey" : "yellow",
             }}
         >
-            {props.hex.id}
+            {props.hexGetter.id}
         </div>
     );
 }

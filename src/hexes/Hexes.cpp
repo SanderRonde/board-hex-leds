@@ -29,10 +29,10 @@ HexNS::Hexes::~Hexes()
 	free(_hexes);
 }
 
-HexNS::Hexes *HexNS::Hexes::from_json(String json)
+HexNS::Hexes *HexNS::Hexes::from_json(unsigned char* json_str, unsigned int json_str_len)
 {
 	DynamicJsonDocument doc(MAX_JSON_DOC_SIZE);
-	DeserializationError error = deserializeJson(doc, json);
+	DeserializationError error = deserializeJson(doc, json_str, json_str_len);
 
 	if (error)
 	{
@@ -49,7 +49,7 @@ HexNS::Hexes *HexNS::Hexes::from_json(String json)
 		created_hexes[i] = Hex::from_json(json_hexes[i]);
 	}
 
-	Hexes* hexes_cls = new Hexes(created_hexes, num_hexes);
+	Hexes *hexes_cls = new Hexes(created_hexes, num_hexes);
 	for (size_t i = 0; i < num_hexes; i++)
 	{
 		(*created_hexes[i]).parent = hexes_cls;

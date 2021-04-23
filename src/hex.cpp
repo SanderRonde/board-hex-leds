@@ -5,15 +5,14 @@
 #include <telnet.h>
 #include <net.h>
 #include <leds.h>
+#include <hexes.h>
 
 namespace HexNS
 {
 	void setup()
 	{
-		String result = Net::req("192.168.1.86", 1234, "/hexes.json");
-		hexes = Hexes::from_json(result);
+		hexes = Hexes::from_json(______data_hexes_json, ______data_hexes_json_len);
 	}
 
 	Hexes *hexes;
 };
-

@@ -2,6 +2,7 @@
 #include <leds.h>
 #include <string.h>
 #include <FastLED.h>
+#include <telnet.h>
 
 #define MAX_CSHV_VALUE 256
 #define NUM_HIGH_INTENSITY_HEXES 2
@@ -14,7 +15,7 @@
 #define MAX_MOVE_TARGET_ITERATIONS 1000
 #define PEAK_BRIGHTNESS_CENTER_DISTANCE 1
 #define LOWEST_BRIGTHENESS_CENTER_DISTANCE 2
-#define RAINBOW_STEP 30
+#define RAINBOW_STEP 15
 
 namespace Effects
 {
@@ -126,6 +127,7 @@ namespace Effects
 		{
 			int wait_time = 0;
 			long long last_iteration;
+			long long last_refresh_iteration;
 			int last_iteration_colors[HEXES_UPPERBOUND];
 			int current_iteration_colors[HEXES_UPPERBOUND];
 
@@ -140,17 +142,19 @@ namespace Effects
 
 			void loop()
 			{
-				if (millis() - last_iteration > wait_time)
+				if (millis() - last_refresh_iteration > wait_time)
 				{
 					for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 					{
 						last_iteration_colors[i] = current_iteration_colors[i];
 						current_iteration_colors[i] = random(0, 255);
 					}
+
+					last_refresh_iteration = millis();
 				}
 
-				int time_diff = millis() % wait_time;
-				double time_diff_percentage = time_diff / wait_time;
+				int time_diff = millis() - last_refresh_iteration;
+				double time_diff_percentage = (double)time_diff / (double)wait_time;
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
 					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);

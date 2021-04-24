@@ -2,20 +2,26 @@
 #include <leds.h>
 #include <string.h>
 #include <FastLED.h>
+#include <util.h>
 #include <telnet.h>
 
 #define MAX_CSHV_VALUE 256
 #define NUM_HIGH_INTENSITY_HEXES 2
+
 #define BACKGROUND_COLOR_CHANGE_MIN 10000
 #define BACKGROUND_COLOR_CHANGE_MAX 20000
 #define MOVE_CHANGE_MIN 5000
 #define MOVE_CHANGE_MAX 8000
-#define BACKGROUND_SATURATION 46
-#define BACKGROUND_LIGHTNESS 73
+#define BACKGROUND_SATURATION 160
+#define BACKGROUND_LIGHTNESS 180
 #define MAX_MOVE_TARGET_ITERATIONS 1000
 #define PEAK_BRIGHTNESS_CENTER_DISTANCE 1
 #define LOWEST_BRIGTHENESS_CENTER_DISTANCE 2
 #define RAINBOW_STEP 15
+#define NEIGHBOUR_INFLUENCE 255
+#define STATE_CHANGE_TIME 500
+
+#define MOVE_SAME_BACKGROUND 1
 
 namespace Effects
 {
@@ -47,6 +53,52 @@ namespace Effects
 		animation_fn = NULL;
 	}
 
+	/**
+	 * This is the idea:
+	 * 
+	 * Have a "background" that is filled with some low intensity
+	 * random colors.
+	 * 
+	 * Have an X number of hexes turn into a high intensity color.
+	 * This color changes gradually over time. It also moves
+	 * from one hex to one next to it. 
+	 */
+	typedef struct change
+	{
+		int current;
+		int next;
+		int progress;
+		int total;
+	} change_t;
+
+	namespace Change
+	{
+		change_t set_new_color_target(change_t prev_change, int interval_min, int interval_max)
+		{
+			change_t change;
+			change.current = prev_change.next;
+			change.progress = 0;
+			change.total = random(interval_min, interval_max);
+			change.next = random(0, 255);
+			return change;
+		}
+
+		int get_current_value(change_t change)
+		{
+			int diff = change.next - change.current;
+			double progress = Util::divide(change.progress, change.total);
+			return change.current + (diff * progress);
+		}
+
+		CRGB get_current_color(change_t change)
+		{
+			CRGB current = CHSV(change.current, 255, 255);
+			CRGB next = CHSV(change.next, 255, 255);
+			double progress = Util::divide(change.progress, change.total);
+			return Util::fade_towards_color(current, next, progress * 255);
+		}
+	}
+
 	namespace Animations
 	{
 		namespace Rainbow
@@ -58,7 +110,7 @@ namespace Effects
 
 			void setup(int _revolve_time)
 			{
-				revolve_step = (double)255 / _revolve_time;
+				revolve_step = Util::divide(255, _revolve_time);
 				last_iteration = 0;
 				offset = 0;
 			}
@@ -75,7 +127,7 @@ namespace Effects
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
 					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
-					int hex_led_step = MAX_CSHV_VALUE / hex->num_leds;
+					int hex_led_step = (int)Util::divide(MAX_CSHV_VALUE, hex->num_leds);
 
 					int total_step = rounded_offset;
 					for (int j = 0; j < hex->num_leds; j++, total_step = (hex_led_step + total_step) % MAX_CSHV_VALUE)
@@ -83,8 +135,6 @@ namespace Effects
 						hex->set_at_index(j, CHSV(total_step, 255, 255));
 					}
 				}
-
-				FastLED.show();
 			}
 		}
 
@@ -97,7 +147,7 @@ namespace Effects
 
 			void setup(int _revolve_time)
 			{
-				revolve_step = (double)255 / _revolve_time;
+				revolve_step = Util::divide(255, _revolve_time);
 				last_iteration = 0;
 				offset = 0;
 			}
@@ -118,52 +168,68 @@ namespace Effects
 
 					total_offset = (total_offset + RAINBOW_STEP) % MAX_CSHV_VALUE;
 				}
-
-				FastLED.show();
 			}
 		}
 
 		namespace RandomColorsGradual
 		{
-			int wait_time = 0;
+			int wait_time_min = 0;
+			int wait_time_max = 0;
+			uint8_t neighbour_influence = 0;
+			bool use_pastel = false;
 			long long last_iteration;
 			long long last_refresh_iteration;
-			int last_iteration_colors[HEXES_UPPERBOUND];
-			int current_iteration_colors[HEXES_UPPERBOUND];
+			change_t colors[HEXES_UPPERBOUND];
 
-			void setup(int _wait_time)
+			void setup(int _wait_time_min, int _wait_time_max, int _neighbour_influence, bool _use_pastel)
 			{
-				wait_time = _wait_time;
+				wait_time_min = _wait_time_min;
+				wait_time_max = _wait_time_max;
+				neighbour_influence = _neighbour_influence;
+				use_pastel = _use_pastel;
 				for (int i = 0; i < HEXES_UPPERBOUND; i++)
 				{
-					current_iteration_colors[i] = last_iteration_colors[i] = 0;
+					change_t prev;
+					prev.next = random(0, 255);
+					colors[i] = Change::set_new_color_target(prev, wait_time_min, wait_time_max);
 				}
+				last_iteration = millis();
 			}
 
 			void loop()
 			{
-				if (millis() - last_refresh_iteration > wait_time)
-				{
-					for (int i = 0; i < HexNS::hexes->num_hexes; i++)
-					{
-						last_iteration_colors[i] = current_iteration_colors[i];
-						current_iteration_colors[i] = random(0, 255);
-					}
+				int time_diff = millis() - last_iteration;
+				last_iteration = millis();
 
-					last_refresh_iteration = millis();
-				}
-
-				int time_diff = millis() - last_refresh_iteration;
-				double time_diff_percentage = (double)time_diff / (double)wait_time;
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
-					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
-					int hue_diff = current_iteration_colors[i] - last_iteration_colors[i];
-					hex->set_color(CHSV(last_iteration_colors[i] + (hue_diff * time_diff_percentage), 255, 255));
-				}
+					colors[i].progress += time_diff;
+					if (colors[i].progress > colors[i].total)
+					{
+						colors[i] = Change::set_new_color_target(colors[i], wait_time_min, wait_time_max);
+					}
 
-				last_iteration = millis();
-				FastLED.show();
+					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
+					CRGB current_color = use_pastel ? Change::get_current_color(colors[i]) : CHSV(Change::get_current_value(colors[i]), 255, 255);
+
+					for (int j = 0; j < hex->num_leds; j++)
+					{
+						HexNS::Hex *neighbour = hex->get_neighbour_at_led(j);
+
+						if (neighbour == NULL)
+						{
+							hex->set_at_index(j, current_color);
+						}
+						else
+						{
+							// Get the color of the neighbour
+							CRGB neighbour_color = use_pastel ? Change::get_current_color(colors[neighbour->index]) : CHSV(Change::get_current_value(colors[neighbour->index]), 255, 255);
+
+							// Move towards it a little
+							hex->set_at_index(j, Util::fade_towards_color(current_color, neighbour_color, neighbour_influence));
+						}
+					}
+				}
 			}
 		}
 
@@ -192,29 +258,11 @@ namespace Effects
 				}
 
 				last_iteration = millis();
-				FastLED.show();
 			}
 		}
 
 		namespace MoveAround
 		{
-			/**
-			 * This is the idea:
-			 * 
-			 * Have a "background" that is filled with some low intensity
-			 * random colors.
-			 * 
-			 * Have an X number of hexes turn into a high intensity color.
-			 * This color changes gradually over time. It also moves
-			 * from one hex to one next to it. 
-			 */
-			typedef struct change
-			{
-				int current;
-				int next;
-				int progress;
-				int total;
-			} change_t;
 
 			typedef struct high_intensity_hex
 			{
@@ -227,18 +275,9 @@ namespace Effects
 			} high_intensity_hex_t;
 
 			change_t background_colors[HEXES_UPPERBOUND];
+
 			high_intensity_hex_t high_intensity_hexes[NUM_HIGH_INTENSITY_HEXES];
 			long long last_iteration;
-
-			change_t set_new_color_target(change_t prev_change, int interval_min, int interval_max)
-			{
-				change_t change;
-				change.current = prev_change.next;
-				change.progress = 0;
-				change.total = random(interval_min, interval_max);
-				change.next = random(0, 255);
-				return change;
-			}
 
 			int random_except(int min, int max, int except)
 			{
@@ -311,33 +350,45 @@ namespace Effects
 			{
 				change_t prev;
 				prev.next = 0;
+#ifdef MOVE_SAME_BACKGROUND
+				background_colors[0] = Change::set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
+#else
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
 					background_colors[i] = set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
 				}
+#endif
 
 				for (int i = 0; i < NUM_HIGH_INTENSITY_HEXES; i++)
 				{
-					high_intensity_hex_t hex;
-					hex.index = random(0, HexNS::hexes->num_hexes);
-					hex.color_change = set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
-					hex.move_side = (HexNS::hex_side_t)random(0, HEX_SIDES);
+					high_intensity_hex_t *hex = &high_intensity_hexes[i];
+
+					bool hex_taken = false;
+					do
+					{
+						hex_taken = false;
+						hex->index = random(0, HexNS::hexes->num_hexes);
+						for (int j = 0; j < i; j++)
+						{
+							if (high_intensity_hexes[j].index == hex->index)
+							{
+								hex_taken = true;
+								break;
+							}
+						}
+					} while (hex_taken);
+					LOGF("Choosing hex %d\n", hex->index);
+					hex->color_change = Change::set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
+					hex->move_side = (HexNS::hex_side_t)random(0, HEX_SIDES);
 					change_t move_change;
-					move_change.current = hex.index;
-					move_change.next = random_except(0, HexNS::hexes->num_hexes, hex.index);
+					move_change.current = hex->index;
+					move_change.next = random_except(0, HexNS::hexes->num_hexes, hex->index);
 					move_change.progress = 0;
 					move_change.total = random(MOVE_CHANGE_MIN, MOVE_CHANGE_MAX);
-					hex.move_change = move_change;
+					hex->move_change = move_change;
 				}
 
 				last_iteration = millis();
-			}
-
-			int get_current_value(change_t change)
-			{
-				int diff = change.next - change.current;
-				double progress = change.progress / change.total;
-				return change.current + (diff * progress);
 			}
 
 			int get_direction_angle(HexNS::hex_side_t direction)
@@ -347,7 +398,7 @@ namespace Effects
 
 			int mod_positive(int base, int modulo)
 			{
-				return base - floor(base / modulo) * modulo;
+				return base - floor(Util::divide(base, modulo)) * modulo;
 			}
 
 			/**
@@ -377,53 +428,41 @@ namespace Effects
 				return sqrt16(BC_squared);
 			}
 
-			uint8_t nblendU8TowardU8(uint8_t cur, const uint8_t target, uint8_t amount)
-			{
-				if (cur == target)
-					return cur;
-
-				if (cur < target)
-				{
-					uint8_t delta = target - cur;
-					delta = scale8_video(delta, amount);
-					return cur + delta;
-				}
-				else
-				{
-					uint8_t delta = cur - target;
-					delta = scale8_video(delta, amount);
-					return cur - delta;
-				}
-			}
-
-			CRGB fadeTowardColor(CRGB cur, const CRGB target, uint8_t amount)
-			{
-				CRGB blended;
-				blended.red = nblendU8TowardU8(cur.red, target.red, amount);
-				blended.green = nblendU8TowardU8(cur.green, target.green, amount);
-				blended.blue = nblendU8TowardU8(cur.blue, target.blue, amount);
-				return blended;
-			}
-
 			void loop()
 			{
 				long long time_diff = millis() - last_iteration;
+				last_iteration = millis();
 
 				// Paint backgrounds
-				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
+#ifndef MOVE_SAME_BACKGROUND
+				for (int hex_idx = 0; hex_idx < HexNS::hexes->num_hexes; hex_idx++)
 				{
-					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
-					background_colors[i].progress += time_diff;
-					if (background_colors[i].progress > background_colors[i].total)
+#endif
+#ifdef MOVE_SAME_BACKGROUND
+					int hex_idx = 0;
+#endif
+					HexNS::Hex *hex = HexNS::hexes->get_by_index(hex_idx);
+					background_colors[hex_idx].progress += time_diff;
+					if (background_colors[hex_idx].progress > background_colors[hex_idx].total)
 					{
 						// Choose a new color target
-						background_colors[i] = set_new_color_target(background_colors[i], BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
+						background_colors[hex_idx] = Change::set_new_color_target(background_colors[hex_idx], BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
 					}
 
 					// Find color
-					int current_hue = get_current_value(background_colors[i]);
-					hex->set_color(CHSV(current_hue, BACKGROUND_SATURATION, BACKGROUND_LIGHTNESS));
+					int current_hue = Change::get_current_value(background_colors[hex_idx]);
+#ifdef MOVE_SAME_BACKGROUND
+					for (int i = 0; i < HexNS::hexes->num_hexes; i++)
+					{
+						hex = HexNS::hexes->get_by_index(i);
+#endif
+						hex->set_color(CHSV(current_hue, BACKGROUND_SATURATION, BACKGROUND_LIGHTNESS));
+#ifdef MOVE_SAME_BACKGROUND
+					}
+#endif
+#ifndef MOVE_SAME_BACKGROUND
 				}
+#endif
 
 				for (int i = 0; i < NUM_HIGH_INTENSITY_HEXES; i++)
 				{
@@ -434,7 +473,7 @@ namespace Effects
 					if (high_intensity_hexes[i].color_change.progress > high_intensity_hexes[i].color_change.total)
 					{
 						// Choose a new color target
-						high_intensity_hexes[i].color_change = set_new_color_target(high_intensity_hexes[i].color_change, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
+						high_intensity_hexes[i].color_change = Change::set_new_color_target(high_intensity_hexes[i].color_change, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
 					}
 
 					// Do move change
@@ -448,7 +487,7 @@ namespace Effects
 					// Do the coloring
 					if (high_intensity_hexes[i].move_change.next == high_intensity_hexes[i].move_change.current)
 					{
-						hex->set_color(CHSV(get_current_value(high_intensity_hexes->color_change), 255, 255));
+						hex->set_color(CHSV(Change::get_current_value(high_intensity_hexes->color_change), 255, 255));
 					}
 					else
 					{
@@ -475,15 +514,13 @@ namespace Effects
 								int distance_to_center = get_distance_between_led_and_center(progress, side_angle, hex->get_angle_at_index(k));
 
 								float scaled_proximity = distance_to_center > LOWEST_BRIGTHENESS_CENTER_DISTANCE ? 0 : 1 - (distance_to_center - PEAK_BRIGHTNESS_CENTER_DISTANCE) / (LOWEST_BRIGTHENESS_CENTER_DISTANCE - PEAK_BRIGHTNESS_CENTER_DISTANCE);
-								CHSV background_color = CHSV(get_current_value(background_colors[hex_index]), BACKGROUND_LIGHTNESS, BACKGROUND_SATURATION);
-								CHSV foreground_color = CHSV(get_current_value(high_intensity_hexes[i].color_change), 255, 255);
-								hex->set_at_index(k, fadeTowardColor(background_color, foreground_color, scaled_proximity * 255));
+								CHSV background_color = CHSV(Change::get_current_value(background_colors[hex_index]), BACKGROUND_LIGHTNESS, BACKGROUND_SATURATION);
+								CHSV foreground_color = CHSV(Change::get_current_value(high_intensity_hexes[i].color_change), 255, 255);
+								hex->set_at_index(k, Util::fade_towards_color(background_color, foreground_color, scaled_proximity * 255));
 							}
 						}
 					}
 				}
-
-				FastLED.show();
 			}
 		}
 	}
@@ -492,12 +529,14 @@ namespace Effects
 	{
 		void set_led(String index, String color)
 		{
+			animating = false;
 			Leds::leds[atoi(index.c_str())] = parse_color(color);
 			FastLED.show();
 		}
 
 		void set_led_in_hex(String index, String hex_id, String color)
 		{
+			animating = false;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(atoi(hex_id.c_str()));
 			hex->set_at_index(atoi(index.c_str()), parse_color(color));
 			FastLED.show();
@@ -505,6 +544,7 @@ namespace Effects
 
 		void set_hex(String hex_id, String color)
 		{
+			animating = false;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(atoi(hex_id.c_str()));
 			hex->set_color(parse_color(color));
 			FastLED.show();
@@ -526,6 +566,7 @@ namespace Effects
 
 		void set_all(String str_color)
 		{
+			animating = false;
 			CRGB color = parse_color(str_color);
 			for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 			{
@@ -541,9 +582,9 @@ namespace Effects
 			animation_fn = Animations::MoveAround::loop;
 		}
 
-		void random_colors_gradual(int wait_time)
+		void random_colors_gradual(int wait_time_min, int wait_time_max, int neighbour_influence, bool use_pastel)
 		{
-			Animations::RandomColorsGradual::setup(wait_time);
+			Animations::RandomColorsGradual::setup(wait_time_min, wait_time_max, neighbour_influence, use_pastel);
 			animating = true;
 			animation_fn = Animations::RandomColorsGradual::loop;
 		}
@@ -556,11 +597,61 @@ namespace Effects
 		}
 	}
 
+	bool enabled = true;
+	bool enabling = false;
+	bool disabling = false;
+	int state_change_progress = 255;
+	unsigned long state_change_start = millis();
+	void enable()
+	{
+		enabled = true;
+		enabling = true;
+		state_change_progress = 0;
+		state_change_start = millis();
+	}
+
+	void disable()
+	{
+		disabling = true;
+		state_change_progress = 255;
+		state_change_start = millis();
+	}
+
 	void loop()
 	{
-		if (animating)
+		if (animating && enabled)
 		{
 			animation_fn();
+
+			if (enabling || disabling) {
+				unsigned long time_passed = millis() - state_change_start;
+				double percentage_transition_complete = Util::divide(time_passed, STATE_CHANGE_TIME);
+				if (enabling)
+				{
+					state_change_progress = percentage_transition_complete * 255;
+					if (time_passed >= STATE_CHANGE_TIME) {
+						state_change_progress = 255;
+						enabling = false;
+					}
+				}
+				else if (disabling)
+				{
+					state_change_progress  = 255 - (percentage_transition_complete * 255);
+					if (time_passed >= STATE_CHANGE_TIME)
+					{
+						state_change_progress = 0;
+						disabling = false;
+						enabled = false;
+						FastLED.showColor(CRGB::Black);
+						return;
+					}
+				}
+			}
+
+			if (state_change_progress != 255) {
+				Leds::leds->nscale8(255);
+			}
+			FastLED.show(state_change_progress);
 		}
 	}
 }

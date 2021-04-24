@@ -41,6 +41,7 @@ HexNS::Hexes *HexNS::Hexes::from_described(const hex_describer_t hexes[], size_t
 	for (size_t i = 0; i < num_hexes; i++)
 	{
 		(*created_hexes[i]).parent = hexes_cls;
+		(*created_hexes[i]).index = i;
 	}
 
 	return hexes_cls;

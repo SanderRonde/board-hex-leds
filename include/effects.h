@@ -16,10 +16,14 @@ namespace Effects
 
 		void move_around();
 
-		void random_colors_gradual(int wait_time);
+		void random_colors_gradual(int wait_time_min, int wait_time_max, int neighbour_influence, bool use_pastel);
 
 		void random_colors(int wait_time);
 	}
+
+	void enable();
+
+	void disable();
 	
 	void loop();
 }

@@ -104,7 +104,7 @@ namespace API
 		log_request();
 		if ((!server.hasArg("color") && !server.hasArg("power")))
 		{
-			server.send(400, "text/plain", "400: Invalid reiquest");
+			server.send(400, "text/plain", "400: Invalid request");
 			return;
 		}
 
@@ -161,14 +161,17 @@ namespace API
 	void handle_set_random_colors_gradual()
 	{
 		log_request();
-		int wait_time = DEFAULT_RANDOM_COLORS_GRADUAL_WAIT_TIME;
-		if (server.hasArg("wait_time"))
+		if (!server.hasArg("wait_time_min") || !server.hasArg("wait_time_max") || !server.hasArg("neighbour_influence") || !server.hasArg("use_pastel"))
 		{
-			String wait_time_str = server.arg("wait_time");
-			wait_time = atoi(wait_time_str.c_str());
+			server.send(400, "text/plain", "400: Invalid request");
+			return;
 		}
 
-		Effects::Effects::random_colors_gradual(wait_time);
+		int wait_time_min = atoi(server.arg("wait_time_min").c_str());
+		int wait_time_max = atoi(server.arg("wait_time_max").c_str());
+		int neighbour_influence = atoi(server.arg("neighbour_influence").c_str());
+		bool use_pastel = server.arg("use_pastel") == "true";
+		Effects::Effects::random_colors_gradual(wait_time_min, wait_time_max, neighbour_influence, use_pastel);
 
 		respond_succes();
 	}
@@ -188,11 +191,27 @@ namespace API
 		respond_succes();
 	}
 
+	void handle_off()
+	{
+		log_request();
+		Effects::disable();
+		respond_succes();
+	}
+
+	void handle_on()
+	{
+		log_request();
+		Effects::enable();
+		respond_succes();
+	}
+
 	void setup()
 	{
 
 		server.begin(SERVER_PORT);
 		server.on("/", HTTP_GET, handle_root);
+		server.on("/on", HTTP_POST, handle_on);
+		server.on("/off", HTTP_POST, handle_off);
 		server.on("/set_led_in_hex", HTTP_POST, handle_set_led_in_hex);
 		server.on("/set_led", HTTP_POST, handle_set_led);
 		server.on("/set_hex", HTTP_POST, handle_set_hex);

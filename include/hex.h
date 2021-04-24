@@ -38,6 +38,7 @@ namespace HexNS
 	public:
 		void *parent;
 		int id;
+		int index;
 		int num_leds;
 
 		Hex(hex_describer_t described_hex);
@@ -50,6 +51,7 @@ namespace HexNS
 		int get_angle_at_index(int index);
 
 		Hex *get_neighbour(hex_side_t side);
+		Hex *get_neighbour_at_led(int led_index);
 
 		/**
 		 * Calculate the step size in order to reach a full

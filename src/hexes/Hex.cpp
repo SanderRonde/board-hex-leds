@@ -1,5 +1,6 @@
 #include <hex.h>
 #include <leds.h>
+#include <util.h>
 #include <telnet.h>
 
 template <class T>
@@ -15,9 +16,11 @@ void reverse_arr(T *arr, int arr_len)
 }
 
 template <class T>
-void shift_array_once(T* arr, int arr_len) {
+void shift_array_once(T *arr, int arr_len)
+{
 	T last_item = arr[arr_len - 1];
-	for (int i = 0; i < arr_len; i++) {
+	for (int i = 0; i < arr_len; i++)
+	{
 		T temp = arr[i];
 		arr[i] = last_item;
 		last_item = temp;
@@ -25,8 +28,10 @@ void shift_array_once(T* arr, int arr_len) {
 }
 
 template <class T>
-void shift_array(T* arr, int arr_len, int shift_amount) {
-	for (int i = 0; i < shift_amount; i++) {
+void shift_array(T *arr, int arr_len, int shift_amount)
+{
+	for (int i = 0; i < shift_amount; i++)
+	{
 		shift_array_once<T>(arr, arr_len);
 	}
 }
@@ -46,8 +51,9 @@ HexNS::Hex::Hex(hex_describer_t described_hex)
 	{
 		reverse_arr<int>(_led_indices, num_leds);
 	}
-	if (described_hex.offset_percentage) {
-		int offset_flat_amount = round(num_leds * (double) described_hex.offset_percentage / 100);
+	if (described_hex.offset_percentage)
+	{
+		int offset_flat_amount = round(num_leds * (double)described_hex.offset_percentage / 100);
 		shift_array<int>(_led_indices, num_leds, offset_flat_amount);
 	}
 	memcpy(_sides, described_hex.borders, sizeof(int) * HEX_SIDES);
@@ -85,6 +91,14 @@ HexNS::Hex *HexNS::Hex::get_neighbour(HexNS::hex_side_t side)
 	return ((HexNS::Hexes *)parent)->get_by_id(side);
 }
 
+HexNS::Hex *HexNS::Hex::get_neighbour_at_led(int led_index)
+{
+	int side_index_unfixed = (int) floor((Util::divide(led_index, num_leds) * HEX_SIDES) - 0.5);
+	int side_index = (HEX_SIDES + side_index_unfixed) % HEX_SIDES;
+
+	return get_neighbour((HexNS::hex_side_t)side_index);
+}
+
 /**
  * Calculate the step size in order to reach a full
  * revolution in given `revolution_time`
@@ -96,6 +110,6 @@ float HexNS::Hex::get_step_size_for_revolution(long revolution_time)
 
 int HexNS::Hex::get_angle_at_index(int index)
 {
-	int angle_per_led = FULL_ROTATION_ANGLE / num_leds;
+	int angle_per_led = Util::divide(FULL_ROTATION_ANGLE, num_leds);
 	return ((index * angle_per_led) + (ANGLE_PER_SIDE / 2)) % FULL_ROTATION_ANGLE;
 }

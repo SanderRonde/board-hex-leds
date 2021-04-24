@@ -146,7 +146,7 @@ namespace API
 	void handle_set_all()
 	{
 		log_request();
-		if (!require_args("color", "power"))
+		if (!require_args("color"))
 			return;
 
 		if (server.hasArg("power") && server.arg("power") == "off")

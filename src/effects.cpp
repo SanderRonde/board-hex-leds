@@ -25,6 +25,8 @@
 
 namespace Effects
 {
+	void enable();
+
 	CRGB parse_color(String color)
 	{
 		CRGB color_obj;
@@ -529,6 +531,7 @@ namespace Effects
 	{
 		void set_led(String index, String color)
 		{
+			enable();
 			animating = false;
 			Leds::leds[atoi(index.c_str())] = parse_color(color);
 			FastLED.show();
@@ -536,6 +539,7 @@ namespace Effects
 
 		void set_led_in_hex(String index, String hex_id, String color)
 		{
+			enable();
 			animating = false;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(atoi(hex_id.c_str()));
 			hex->set_at_index(atoi(index.c_str()), parse_color(color));
@@ -544,6 +548,7 @@ namespace Effects
 
 		void set_hex(String hex_id, String color)
 		{
+			enable();
 			animating = false;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(atoi(hex_id.c_str()));
 			hex->set_color(parse_color(color));
@@ -552,6 +557,7 @@ namespace Effects
 
 		void enable_rainbow(int revolve_time)
 		{
+			enable();
 			Animations::Rainbow::setup(revolve_time);
 			animating = true;
 			animation_fn = Animations::Rainbow::loop;
@@ -559,6 +565,7 @@ namespace Effects
 
 		void enable_edge_rainbow(int revolve_time)
 		{
+			enable();
 			Animations::EdgeRainbow::setup(revolve_time);
 			animating = true;
 			animation_fn = Animations::EdgeRainbow::loop;
@@ -566,6 +573,7 @@ namespace Effects
 
 		void set_all(String str_color)
 		{
+			enable();
 			animating = false;
 			CRGB color = parse_color(str_color);
 			for (int i = 0; i < HexNS::hexes->num_hexes; i++)
@@ -577,6 +585,7 @@ namespace Effects
 
 		void move_around()
 		{
+			enable();
 			Animations::MoveAround::setup();
 			animating = true;
 			animation_fn = Animations::MoveAround::loop;
@@ -584,6 +593,7 @@ namespace Effects
 
 		void random_colors_gradual(int wait_time_min, int wait_time_max, int neighbour_influence, bool use_pastel)
 		{
+			enable();
 			Animations::RandomColorsGradual::setup(wait_time_min, wait_time_max, neighbour_influence, use_pastel);
 			animating = true;
 			animation_fn = Animations::RandomColorsGradual::loop;
@@ -591,6 +601,7 @@ namespace Effects
 
 		void random_colors(int wait_time)
 		{
+			enable();
 			Animations::RandomColors::setup(wait_time);
 			animating = true;
 			animation_fn = Animations::RandomColors::loop;
@@ -604,6 +615,7 @@ namespace Effects
 	unsigned long state_change_start = millis();
 	void enable()
 	{
+		if (enabled) return;
 		enabled = true;
 		enabling = true;
 		state_change_progress = 0;

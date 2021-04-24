@@ -19,7 +19,8 @@
 #define LOWEST_BRIGTHENESS_CENTER_DISTANCE 2
 #define RAINBOW_STEP 15
 #define NEIGHBOUR_INFLUENCE 255
-#define STATE_CHANGE_TIME 500
+#define STATE_CHANGE_TIME 1000
+#define ENABLE_FADE_OUT 0
 
 #define MOVE_SAME_BACKGROUND 1
 
@@ -627,6 +628,7 @@ namespace Effects
 		{
 			enable();
 			animating = false;
+			animation_fn = NULL;
 			Leds::leds[index] = parse_color(color);
 			FastLED.show();
 		}
@@ -635,6 +637,7 @@ namespace Effects
 		{
 			enable();
 			animating = false;
+			animation_fn = NULL;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(hex_id);
 			hex->set_at_index(index, parse_color(color));
 			FastLED.show();
@@ -644,6 +647,7 @@ namespace Effects
 		{
 			enable();
 			animating = false;
+			animation_fn = NULL;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(hex_id);
 			hex->set_color(parse_color(color));
 			FastLED.show();
@@ -669,6 +673,7 @@ namespace Effects
 		{
 			enable();
 			animating = false;
+			animation_fn = NULL;
 			CRGB color = parse_color(str_color);
 			for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 			{
@@ -711,22 +716,39 @@ namespace Effects
 	{
 		if (enabled)
 			return;
-		enabled = true;
-		enabling = true;
-		state_change_progress = 0;
-		state_change_start = millis();
+
+		if (ENABLE_FADE_OUT)
+		{
+			enabled = true;
+			enabling = true;
+			state_change_progress = 0;
+			state_change_start = millis();
+		}
+		else
+		{
+			enabled = true;
+			enabling = false;
+		}
 	}
 
 	void disable()
 	{
-		disabling = true;
-		state_change_progress = 255;
-		state_change_start = millis();
+		if (ENABLE_FADE_OUT)
+		{
+			disabling = true;
+			state_change_progress = 255;
+			state_change_start = millis();
+		}
+		else
+		{
+			enabled = false;
+			disabling = false;
+		}
 	}
 
 	void loop()
 	{
-		if (animating && enabled)
+		if (animating && enabled && animation_fn)
 		{
 			if (!animation_fn())
 			{
@@ -761,7 +783,8 @@ namespace Effects
 
 				if (state_change_progress != 255)
 				{
-					Leds::leds->nscale8(255);
+					FastLED.show(state_change_progress);
+					return;
 				}
 			}
 

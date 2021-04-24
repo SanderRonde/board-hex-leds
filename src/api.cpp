@@ -2,9 +2,6 @@
 #include <effects.h>
 #include <telnet.h>
 
-#define DEFAULT_REVOLVE_TIME 10000
-#define DEFAULT_RANDOM_COLORS_GRADUAL_WAIT_TIME 1000
-#define DEFAULT_RANDOM_COLORS_WAIT_TIME 1000
 #define SERVER_PORT 80
 
 namespace API
@@ -16,9 +13,56 @@ namespace API
 		server.send(200, "text/json", "{\"success\": true}");
 	}
 
+	inline void respond_invalid_request()
+	{
+		server.send(400, "text/plain", "400: Invalid request");
+	}
+
+	inline int get_num_arg(String arg_name)
+	{
+		return atoi(server.arg(arg_name).c_str());
+	}
+
+	bool has_single_arg(const char *arg)
+	{
+		if (arg == NULL)
+			return true;
+		return server.hasArg(String(arg));
+	}
+
+		bool require_args(const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char* arg5)
+	{
+		if (!has_single_arg(arg1) || !has_single_arg(arg2) || !has_single_arg(arg3) || !has_single_arg(arg4) || !has_single_arg(arg5))
+		{
+			respond_invalid_request();
+			return false;
+		}
+		return true;
+	}
+
+	bool require_args(const char *arg1, const char *arg2, const char *arg3, const char *arg4)
+	{
+		return require_args(arg1, arg2, arg3, arg4, NULL);
+	}
+
+	bool require_args(const char *arg1, const char *arg2, const char *arg3)
+	{
+		return require_args(arg1, arg2, arg3, NULL);
+	}
+
+	bool require_args(const char *arg1, const char *arg2)
+	{
+		return require_args(arg1, arg2, NULL);
+	}
+
+	bool require_args(const char *arg1)
+	{
+		return require_args(arg1, NULL);
+	}
+
 	inline void log_request()
 	{
-		LOGF("Got request for URI: %s\n", server.uri().c_str());
+		LOGF("Got request for URI: %s with %d args\n", server.uri().c_str(), server.args());
 	}
 
 	void handle_root()
@@ -39,17 +83,17 @@ namespace API
 		if (!server.hasArg("num") ||
 				(!server.hasArg("color") && !server.hasArg("power")))
 		{
-			server.send(400, "text/plain", "400: Invalid reiquest");
+			respond_invalid_request();
 			return;
 		}
 
 		if (server.hasArg("power") && server.arg("power") == "off")
 		{
-			Effects::Effects::set_led(server.arg("num"), "#000000");
+			Effects::Effects::set_led(get_num_arg("num"), "#000000");
 		}
 		else
 		{
-			Effects::Effects::set_led(server.arg("num"), server.arg("color"));
+			Effects::Effects::set_led(get_num_arg("num"), server.arg("color"));
 		}
 
 		respond_succes();
@@ -61,17 +105,17 @@ namespace API
 		if (!server.hasArg("index") || !server.hasArg("hex_id") ||
 				(!server.hasArg("color") && !server.hasArg("power")))
 		{
-			server.send(400, "text/plain", "400: Invalid reiquest");
+			respond_invalid_request();
 			return;
 		}
 
 		if (server.hasArg("power") && server.arg("power") == "off")
 		{
-			Effects::Effects::set_led_in_hex(server.arg("index"), server.arg("hex_id"), "#000000");
+			Effects::Effects::set_led_in_hex(get_num_arg("index"), get_num_arg("hex_id"), "#000000");
 		}
 		else
 		{
-			Effects::Effects::set_led_in_hex(server.arg("index"), server.arg("hex_id"), server.arg("color"));
+			Effects::Effects::set_led_in_hex(get_num_arg("index"), get_num_arg("hex_id"), server.arg("color"));
 		}
 
 		respond_succes();
@@ -83,17 +127,17 @@ namespace API
 		if (!server.hasArg("hex_id") ||
 				(!server.hasArg("color") && !server.hasArg("power")))
 		{
-			server.send(400, "text/plain", "400: Invalid reiquest");
+			respond_invalid_request();
 			return;
 		}
 
 		if (server.hasArg("power") && server.arg("power") == "off")
 		{
-			Effects::Effects::set_hex(server.arg("hex_id"), "#000000");
+			Effects::Effects::set_hex(get_num_arg("hex_id"), "#000000");
 		}
 		else
 		{
-			Effects::Effects::set_hex(server.arg("hex_id"), server.arg("color"));
+			Effects::Effects::set_hex(get_num_arg("hex_id"), server.arg("color"));
 		}
 
 		respond_succes();
@@ -102,11 +146,8 @@ namespace API
 	void handle_set_all()
 	{
 		log_request();
-		if ((!server.hasArg("color") && !server.hasArg("power")))
-		{
-			server.send(400, "text/plain", "400: Invalid request");
+		if (!require_args("color", "power"))
 			return;
-		}
 
 		if (server.hasArg("power") && server.arg("power") == "off")
 		{
@@ -123,14 +164,10 @@ namespace API
 	void handle_set_rainbow()
 	{
 		log_request();
-		int revolve_time = DEFAULT_REVOLVE_TIME;
-		if (server.hasArg("revolve_time"))
-		{
-			String revolve_time_str = server.arg("revolve_time");
-			revolve_time = atoi(revolve_time_str.c_str());
-		}
+		if (!require_args("revolve_time"))
+			return;
 
-		Effects::Effects::enable_rainbow(revolve_time);
+		Effects::Effects::enable_rainbow(get_num_arg("revolve_time"));
 
 		respond_succes();
 	}
@@ -138,14 +175,11 @@ namespace API
 	void handle_set_edge_rainbow()
 	{
 		log_request();
-		int revolve_time = DEFAULT_REVOLVE_TIME;
-		if (server.hasArg("revolve_time"))
-		{
-			String revolve_time_str = server.arg("revolve_time");
-			revolve_time = atoi(revolve_time_str.c_str());
-		}
 
-		Effects::Effects::enable_edge_rainbow(revolve_time);
+		if (!require_args("revolve_time"))
+			return;
+
+		Effects::Effects::enable_edge_rainbow(get_num_arg("revolve_time"));
 
 		respond_succes();
 	}
@@ -161,17 +195,15 @@ namespace API
 	void handle_set_random_colors_gradual()
 	{
 		log_request();
-		if (!server.hasArg("wait_time_min") || !server.hasArg("wait_time_max") || !server.hasArg("neighbour_influence") || !server.hasArg("use_pastel"))
-		{
-			server.send(400, "text/plain", "400: Invalid request");
+		if (!require_args("wait_time_min", "wait_time_max", "neighbour_influence", "use_pastel", "use_split"))
 			return;
-		}
 
-		int wait_time_min = atoi(server.arg("wait_time_min").c_str());
-		int wait_time_max = atoi(server.arg("wait_time_max").c_str());
-		int neighbour_influence = atoi(server.arg("neighbour_influence").c_str());
+		int wait_time_min = get_num_arg("wait_time_min");
+		int wait_time_max = get_num_arg("wait_time_max");
+		int neighbour_influence = get_num_arg("neighbour_influence");
 		bool use_pastel = server.arg("use_pastel") == "true";
-		Effects::Effects::random_colors_gradual(wait_time_min, wait_time_max, neighbour_influence, use_pastel);
+		bool use_split = server.arg("use_split") == "true";
+		Effects::Effects::random_colors_gradual(wait_time_min, wait_time_max, neighbour_influence, use_pastel, use_split);
 
 		respond_succes();
 	}
@@ -179,14 +211,10 @@ namespace API
 	void handle_set_random_colors()
 	{
 		log_request();
-		int wait_time = DEFAULT_RANDOM_COLORS_WAIT_TIME;
-		if (server.hasArg("wait_time"))
-		{
-			String wait_time_str = server.arg("wait_time");
-			wait_time = atoi(wait_time_str.c_str());
-		}
+		if (!require_args("wait_time"))
+			return;
 
-		Effects::Effects::random_colors(wait_time);
+		Effects::Effects::random_colors(get_num_arg("wait_time"));
 
 		respond_succes();
 	}

@@ -47,7 +47,7 @@ namespace Effects
 	}
 
 	bool animating = false;
-	void (*animation_fn)();
+	bool (*animation_fn)();
 
 	void stop_animation()
 	{
@@ -117,7 +117,7 @@ namespace Effects
 				offset = 0;
 			}
 
-			void loop()
+			bool loop()
 			{
 				long long time_diff = millis() - last_iteration;
 				double added_offset = (double)time_diff * revolve_step;
@@ -137,6 +137,8 @@ namespace Effects
 						hex->set_at_index(j, CHSV(total_step, 255, 255));
 					}
 				}
+
+				return true;
 			}
 		}
 
@@ -154,7 +156,7 @@ namespace Effects
 				offset = 0;
 			}
 
-			void loop()
+			bool loop()
 			{
 				long long time_diff = millis() - last_iteration;
 				double added_offset = (double)time_diff * revolve_step;
@@ -170,6 +172,8 @@ namespace Effects
 
 					total_offset = (total_offset + RAINBOW_STEP) % MAX_CSHV_VALUE;
 				}
+
+				return true;
 			}
 		}
 
@@ -198,7 +202,7 @@ namespace Effects
 				last_iteration = millis();
 			}
 
-			void loop()
+			bool loop()
 			{
 				int time_diff = millis() - last_iteration;
 				last_iteration = millis();
@@ -232,6 +236,7 @@ namespace Effects
 						}
 					}
 				}
+				return true;
 			}
 		}
 
@@ -245,11 +250,11 @@ namespace Effects
 				wait_time = _wait_time;
 			}
 
-			void loop()
+			bool loop()
 			{
 				if (millis() - last_iteration <= wait_time)
 				{
-					return;
+					return false;
 				}
 
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
@@ -260,6 +265,7 @@ namespace Effects
 				}
 
 				last_iteration = millis();
+				return true;
 			}
 		}
 
@@ -430,7 +436,7 @@ namespace Effects
 				return sqrt16(BC_squared);
 			}
 
-			void loop()
+			bool loop()
 			{
 				long long time_diff = millis() - last_iteration;
 				last_iteration = millis();
@@ -523,6 +529,8 @@ namespace Effects
 						}
 					}
 				}
+
+				return true;
 			}
 		}
 	}
@@ -615,7 +623,8 @@ namespace Effects
 	unsigned long state_change_start = millis();
 	void enable()
 	{
-		if (enabled) return;
+		if (enabled)
+			return;
 		enabled = true;
 		enabling = true;
 		state_change_progress = 0;
@@ -633,22 +642,26 @@ namespace Effects
 	{
 		if (animating && enabled)
 		{
-			animation_fn();
+			if (!animation_fn()) {
+				return;
+			}
 
-			if (enabling || disabling) {
+			if (enabling || disabling)
+			{
 				unsigned long time_passed = millis() - state_change_start;
 				double percentage_transition_complete = Util::divide(time_passed, STATE_CHANGE_TIME);
 				if (enabling)
 				{
 					state_change_progress = percentage_transition_complete * 255;
-					if (time_passed >= STATE_CHANGE_TIME) {
+					if (time_passed >= STATE_CHANGE_TIME)
+					{
 						state_change_progress = 255;
 						enabling = false;
 					}
 				}
 				else if (disabling)
 				{
-					state_change_progress  = 255 - (percentage_transition_complete * 255);
+					state_change_progress = 255 - (percentage_transition_complete * 255);
 					if (time_passed >= STATE_CHANGE_TIME)
 					{
 						state_change_progress = 0;
@@ -658,12 +671,14 @@ namespace Effects
 						return;
 					}
 				}
+
+				if (state_change_progress != 255)
+				{
+					Leds::leds->nscale8(255);
+				}
 			}
 
-			if (state_change_progress != 255) {
-				Leds::leds->nscale8(255);
-			}
-			FastLED.show(state_change_progress);
+			FastLED.show();
 		}
 	}
 }

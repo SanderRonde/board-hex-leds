@@ -73,6 +73,15 @@ namespace Effects
 		int total;
 	} change_t;
 
+	typedef struct split_color
+	{
+		HexNS::Hex *hex;
+		change_t first_half_color;
+		change_t second_half_color;
+		int split_led_idx;
+		bool uses_split;
+	} split_color_t;
+
 	namespace Change
 	{
 		change_t set_new_color_target(change_t prev_change, int interval_min, int interval_max)
@@ -97,6 +106,78 @@ namespace Effects
 			CRGB current = CHSV(change.current, 255, 255);
 			CRGB next = CHSV(change.next, 255, 255);
 			double progress = Util::divide(change.progress, change.total);
+			return Util::fade_towards_color(current, next, progress * 255);
+		}
+	}
+
+	namespace Split
+	{
+		split_color_t set_new_color_target(split_color_t prev_split, int interval_min, int interval_max, HexNS::Hex *hex, bool use_split, bool is_first = false)
+		{
+			split_color_t split_color;
+			split_color.uses_split = use_split;
+			split_color.hex = hex;
+			split_color.first_half_color.current = prev_split.first_half_color.next;
+			split_color.first_half_color.progress = 0;
+			split_color.first_half_color.total = random(interval_min, interval_max);
+			split_color.first_half_color.next = random(0, 255);
+			if (use_split)
+			{
+				split_color.second_half_color.current = prev_split.second_half_color.next;
+				split_color.second_half_color.progress = 0;
+				split_color.second_half_color.total = split_color.first_half_color.total;
+				split_color.second_half_color.next = random(0, 255);
+				split_color.split_led_idx = prev_split.split_led_idx;
+				if (is_first)
+				{
+					split_color.split_led_idx = random(0, hex->num_leds);
+				}
+			}
+			return split_color;
+		}
+
+		void bump_progress(split_color_t *split_color, int progress_amount)
+		{
+			split_color->first_half_color.progress += progress_amount;
+			if (split_color->uses_split)
+			{
+				split_color->second_half_color.progress += progress_amount;
+			}
+		}
+
+		split_color_t change_on_total_reached(split_color_t split_color, int interval_min, int interval_max)
+		{
+			if (split_color.first_half_color.progress > split_color.first_half_color.total)
+			{
+				return set_new_color_target(split_color, interval_min, interval_max, split_color.hex, split_color.uses_split);
+			}
+			return split_color;
+		}
+
+		bool is_pixel_in_half(int led_idx, int half_start, int total_leds)
+		{
+			int half_num_leds = total_leds / 2;
+			if (half_start + half_num_leds > total_leds)
+			{
+				return led_idx > half_start || led_idx <= ((half_start + half_num_leds) % total_leds);
+			}
+			return led_idx > half_start && led_idx <= half_start + half_num_leds;
+		}
+
+		int get_current_value(split_color_t split_color, int led_idx)
+		{
+			change_t cur_change = split_color.uses_split && is_pixel_in_half(led_idx, split_color.split_led_idx, split_color.hex->num_leds) ? split_color.second_half_color : split_color.first_half_color;
+			int diff = cur_change.next - cur_change.current;
+			double progress = Util::divide(cur_change.progress, cur_change.total);
+			return cur_change.current + (diff * progress);
+		}
+
+		CRGB get_current_color(split_color_t split_color, int led_idx)
+		{
+			change_t cur_change = split_color.uses_split && is_pixel_in_half(led_idx, split_color.split_led_idx, split_color.hex->num_leds) ? split_color.second_half_color : split_color.first_half_color;
+			CRGB current = CHSV(cur_change.current, 255, 255);
+			CRGB next = CHSV(cur_change.next, 255, 255);
+			double progress = Util::divide(cur_change.progress, cur_change.total);
 			return Util::fade_towards_color(current, next, progress * 255);
 		}
 	}
@@ -183,21 +264,28 @@ namespace Effects
 			int wait_time_max = 0;
 			uint8_t neighbour_influence = 0;
 			bool use_pastel = false;
+			bool use_split = false;
 			long long last_iteration;
 			long long last_refresh_iteration;
-			change_t colors[HEXES_UPPERBOUND];
 
-			void setup(int _wait_time_min, int _wait_time_max, int _neighbour_influence, bool _use_pastel)
+			split_color_t colors[HEXES_UPPERBOUND];
+
+			void setup(int _wait_time_min, int _wait_time_max, int _neighbour_influence, bool _use_pastel, bool _use_split)
 			{
 				wait_time_min = _wait_time_min;
 				wait_time_max = _wait_time_max;
 				neighbour_influence = _neighbour_influence;
 				use_pastel = _use_pastel;
-				for (int i = 0; i < HEXES_UPPERBOUND; i++)
+				use_split = _use_split;
+				LOGF("Using params: wait_time_min %d, wait_time_max %d, neighbour_influence %d, use_pastel %d, use_split %d\n", wait_time_min, wait_time_max, neighbour_influence, use_pastel, use_split);
+				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
-					change_t prev;
-					prev.next = random(0, 255);
-					colors[i] = Change::set_new_color_target(prev, wait_time_min, wait_time_max);
+					split_color_t prev;
+					prev.first_half_color.next = random(0, 255);
+					prev.second_half_color.next = random(0, 255);
+
+					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
+					colors[i] = Split::set_new_color_target(prev, wait_time_min, wait_time_max, hex, use_split, true);
 				}
 				last_iteration = millis();
 			}
@@ -209,17 +297,14 @@ namespace Effects
 
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
-					colors[i].progress += time_diff;
-					if (colors[i].progress > colors[i].total)
-					{
-						colors[i] = Change::set_new_color_target(colors[i], wait_time_min, wait_time_max);
-					}
+					Split::bump_progress(&colors[i], time_diff);
+					colors[i] = Split::change_on_total_reached(colors[i], wait_time_min, wait_time_max);
 
-					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
-					CRGB current_color = use_pastel ? Change::get_current_color(colors[i]) : CHSV(Change::get_current_value(colors[i]), 255, 255);
+					HexNS::Hex *hex = colors[i].hex;
 
 					for (int j = 0; j < hex->num_leds; j++)
 					{
+						CRGB current_color = use_pastel ? Split::get_current_color(colors[i], j) : CHSV(Split::get_current_value(colors[i], j), 255, 255);
 						HexNS::Hex *neighbour = hex->get_neighbour_at_led(j);
 
 						if (neighbour == NULL)
@@ -229,7 +314,8 @@ namespace Effects
 						else
 						{
 							// Get the color of the neighbour
-							CRGB neighbour_color = use_pastel ? Change::get_current_color(colors[neighbour->index]) : CHSV(Change::get_current_value(colors[neighbour->index]), 255, 255);
+							int neighbour_led_idx = (j + hex->num_leds) % hex->num_leds;
+							CRGB neighbour_color = use_pastel ? Split::get_current_color(colors[neighbour->index], neighbour_led_idx) : CHSV(Split::get_current_value(colors[neighbour->index], neighbour_led_idx), 255, 255);
 
 							// Move towards it a little
 							hex->set_at_index(j, Util::fade_towards_color(current_color, neighbour_color, neighbour_influence));
@@ -537,28 +623,28 @@ namespace Effects
 
 	namespace Effects
 	{
-		void set_led(String index, String color)
+		void set_led(int index, String color)
 		{
 			enable();
 			animating = false;
-			Leds::leds[atoi(index.c_str())] = parse_color(color);
+			Leds::leds[index] = parse_color(color);
 			FastLED.show();
 		}
 
-		void set_led_in_hex(String index, String hex_id, String color)
+		void set_led_in_hex(int index, int hex_id, String color)
 		{
 			enable();
 			animating = false;
-			HexNS::Hex *hex = HexNS::hexes->get_by_id(atoi(hex_id.c_str()));
-			hex->set_at_index(atoi(index.c_str()), parse_color(color));
+			HexNS::Hex *hex = HexNS::hexes->get_by_id(hex_id);
+			hex->set_at_index(index, parse_color(color));
 			FastLED.show();
 		}
 
-		void set_hex(String hex_id, String color)
+		void set_hex(int hex_id, String color)
 		{
 			enable();
 			animating = false;
-			HexNS::Hex *hex = HexNS::hexes->get_by_id(atoi(hex_id.c_str()));
+			HexNS::Hex *hex = HexNS::hexes->get_by_id(hex_id);
 			hex->set_color(parse_color(color));
 			FastLED.show();
 		}
@@ -599,10 +685,10 @@ namespace Effects
 			animation_fn = Animations::MoveAround::loop;
 		}
 
-		void random_colors_gradual(int wait_time_min, int wait_time_max, int neighbour_influence, bool use_pastel)
+		void random_colors_gradual(int wait_time_min, int wait_time_max, int neighbour_influence, bool use_pastel, bool split)
 		{
 			enable();
-			Animations::RandomColorsGradual::setup(wait_time_min, wait_time_max, neighbour_influence, use_pastel);
+			Animations::RandomColorsGradual::setup(wait_time_min, wait_time_max, neighbour_influence, use_pastel, split);
 			animating = true;
 			animation_fn = Animations::RandomColorsGradual::loop;
 		}
@@ -642,7 +728,8 @@ namespace Effects
 	{
 		if (animating && enabled)
 		{
-			if (!animation_fn()) {
+			if (!animation_fn())
+			{
 				return;
 			}
 

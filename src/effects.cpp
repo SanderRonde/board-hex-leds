@@ -743,6 +743,7 @@ namespace Effects
 		{
 			enabled = false;
 			disabling = false;
+			FastLED.showColor(CRGB::Black);
 		}
 	}
 

@@ -88,7 +88,11 @@ void HexNS::Hex::set_color(CRGB color)
 
 HexNS::Hex *HexNS::Hex::get_neighbour(HexNS::hex_side_t side)
 {
-	return ((HexNS::Hexes *)parent)->get_by_id(side);
+	int side_id = _sides[side];
+	if (side_id == -1) {
+		return NULL;
+	}
+	return ((HexNS::Hexes *)parent)->get_by_id(side_id);
 }
 
 HexNS::Hex *HexNS::Hex::get_neighbour_at_led(int led_index)

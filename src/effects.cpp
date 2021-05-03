@@ -5,7 +5,8 @@
 #include <util.h>
 #include <telnet.h>
 
-#define MAX_CSHV_VALUE 256
+#define MAX_CSHV_VALUE_MOD 256
+#define MAX_CSHV_VALUE 255
 #define NUM_HIGH_INTENSITY_HEXES 2
 
 #define BACKGROUND_COLOR_CHANGE_MIN 10000
@@ -18,9 +19,10 @@
 #define PEAK_BRIGHTNESS_CENTER_DISTANCE 1
 #define LOWEST_BRIGTHENESS_CENTER_DISTANCE 2
 #define RAINBOW_STEP 15
-#define NEIGHBOUR_INFLUENCE 255
 #define STATE_CHANGE_TIME 1000
 #define ENABLE_FADE_OUT 0
+
+#define MIN_SPLIT_COLOR_DIFF 30
 
 #define MOVE_SAME_BACKGROUND 1
 
@@ -91,7 +93,7 @@ namespace Effects
 			change.current = prev_change.next;
 			change.progress = 0;
 			change.total = random(interval_min, interval_max);
-			change.next = random(0, 255);
+			change.next = random(0, MAX_CSHV_VALUE);
 			return change;
 		}
 
@@ -104,10 +106,10 @@ namespace Effects
 
 		CRGB get_current_color(change_t change)
 		{
-			CRGB current = CHSV(change.current, 255, 255);
-			CRGB next = CHSV(change.next, 255, 255);
+			CRGB current = CHSV(change.current, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
+			CRGB next = CHSV(change.next, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 			double progress = Util::divide(change.progress, change.total);
-			return Util::fade_towards_color(current, next, progress * 255);
+			return Util::fade_towards_color(current, next, progress * MAX_CSHV_VALUE);
 		}
 	}
 
@@ -121,13 +123,13 @@ namespace Effects
 			split_color.first_half_color.current = prev_split.first_half_color.next;
 			split_color.first_half_color.progress = 0;
 			split_color.first_half_color.total = random(interval_min, interval_max);
-			split_color.first_half_color.next = random(0, 255);
+			split_color.first_half_color.next = random(0, MAX_CSHV_VALUE);
 			if (use_split)
 			{
 				split_color.second_half_color.current = prev_split.second_half_color.next;
 				split_color.second_half_color.progress = 0;
 				split_color.second_half_color.total = split_color.first_half_color.total;
-				split_color.second_half_color.next = random(0, 255);
+				split_color.second_half_color.next = Util::random_except_range(0, MAX_CSHV_VALUE, max(split_color.first_half_color.next - MIN_SPLIT_COLOR_DIFF, 0), min(split_color.first_half_color.next + MIN_SPLIT_COLOR_DIFF, MAX_CSHV_VALUE));
 				split_color.split_led_idx = prev_split.split_led_idx;
 				if (is_first)
 				{
@@ -176,10 +178,10 @@ namespace Effects
 		CRGB get_current_color(split_color_t split_color, int led_idx)
 		{
 			change_t cur_change = split_color.uses_split && is_pixel_in_half(led_idx, split_color.split_led_idx, split_color.hex->num_leds) ? split_color.second_half_color : split_color.first_half_color;
-			CRGB current = CHSV(cur_change.current, 255, 255);
-			CRGB next = CHSV(cur_change.next, 255, 255);
+			CRGB current = CHSV(cur_change.current, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
+			CRGB next = CHSV(cur_change.next, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 			double progress = Util::divide(cur_change.progress, cur_change.total);
-			return Util::fade_towards_color(current, next, progress * 255);
+			return Util::fade_towards_color(current, next, progress * MAX_CSHV_VALUE);
 		}
 	}
 
@@ -194,7 +196,7 @@ namespace Effects
 
 			void setup(int _revolve_time)
 			{
-				revolve_step = Util::divide(255, _revolve_time);
+				revolve_step = Util::divide(MAX_CSHV_VALUE, _revolve_time);
 				last_iteration = 0;
 				offset = 0;
 			}
@@ -203,7 +205,7 @@ namespace Effects
 			{
 				long long time_diff = millis() - last_iteration;
 				double added_offset = (double)time_diff * revolve_step;
-				offset = std::fmod(offset + added_offset, MAX_CSHV_VALUE);
+				offset = std::fmod(offset + added_offset, MAX_CSHV_VALUE_MOD);
 				last_iteration = millis();
 
 				int rounded_offset = (int)round(offset);
@@ -211,12 +213,12 @@ namespace Effects
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
 					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
-					int hex_led_step = (int)Util::divide(MAX_CSHV_VALUE, hex->num_leds);
+					int hex_led_step = (int)Util::divide(MAX_CSHV_VALUE_MOD, hex->num_leds);
 
 					int total_step = rounded_offset;
-					for (int j = 0; j < hex->num_leds; j++, total_step = (hex_led_step + total_step) % MAX_CSHV_VALUE)
+					for (int j = 0; j < hex->num_leds; j++, total_step = (hex_led_step + total_step) % MAX_CSHV_VALUE_MOD)
 					{
-						hex->set_at_index(j, CHSV(total_step, 255, 255));
+						hex->set_at_index(j, CHSV(total_step, MAX_CSHV_VALUE, MAX_CSHV_VALUE));
 					}
 				}
 
@@ -233,7 +235,7 @@ namespace Effects
 
 			void setup(int _revolve_time)
 			{
-				revolve_step = Util::divide(255, _revolve_time);
+				revolve_step = Util::divide(MAX_CSHV_VALUE, _revolve_time);
 				last_iteration = 0;
 				offset = 0;
 			}
@@ -242,7 +244,7 @@ namespace Effects
 			{
 				long long time_diff = millis() - last_iteration;
 				double added_offset = (double)time_diff * revolve_step;
-				offset = std::fmod(offset + added_offset, MAX_CSHV_VALUE);
+				offset = std::fmod(offset + added_offset, MAX_CSHV_VALUE_MOD);
 				last_iteration = millis();
 
 				int rounded_offset = (int)round(offset);
@@ -250,9 +252,9 @@ namespace Effects
 				int total_offset = rounded_offset;
 				for (int i = 0; i < NUM_LEDS; i++)
 				{
-					Leds::leds[i] = CHSV(total_offset, 255, 255);
+					Leds::leds[i] = CHSV(total_offset, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 
-					total_offset = (total_offset + RAINBOW_STEP) % MAX_CSHV_VALUE;
+					total_offset = (total_offset + RAINBOW_STEP) % MAX_CSHV_VALUE_MOD;
 				}
 
 				return true;
@@ -282,8 +284,8 @@ namespace Effects
 				for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 				{
 					split_color_t prev;
-					prev.first_half_color.next = random(0, 255);
-					prev.second_half_color.next = random(0, 255);
+					prev.first_half_color.next = random(0, MAX_CSHV_VALUE);
+					prev.second_half_color.next = random(0, MAX_CSHV_VALUE);
 
 					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
 					colors[i] = Split::set_new_color_target(prev, wait_time_min, wait_time_max, hex, use_split, true);
@@ -305,7 +307,7 @@ namespace Effects
 
 					for (int j = 0; j < hex->num_leds; j++)
 					{
-						CRGB current_color = use_pastel ? Split::get_current_color(colors[i], j) : CHSV(Split::get_current_value(colors[i], j), 255, 255);
+						CRGB current_color = use_pastel ? Split::get_current_color(colors[i], j) : CHSV(Split::get_current_value(colors[i], j), MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 						HexNS::Hex *neighbour = hex->get_neighbour_at_led(j);
 
 						if (neighbour == NULL)
@@ -316,7 +318,7 @@ namespace Effects
 						{
 							// Get the color of the neighbour
 							int neighbour_led_idx = (j + hex->num_leds) % hex->num_leds;
-							CRGB neighbour_color = use_pastel ? Split::get_current_color(colors[neighbour->index], neighbour_led_idx) : CHSV(Split::get_current_value(colors[neighbour->index], neighbour_led_idx), 255, 255);
+							CRGB neighbour_color = use_pastel ? Split::get_current_color(colors[neighbour->index], neighbour_led_idx) : CHSV(Split::get_current_value(colors[neighbour->index], neighbour_led_idx), MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 
 							// Move towards it a little
 							hex->set_at_index(j, Util::fade_towards_color(current_color, neighbour_color, neighbour_influence));
@@ -348,7 +350,7 @@ namespace Effects
 				{
 					HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
 
-					hex->set_color(CHSV(random(0, 255), 255, 255));
+					hex->set_color(CHSV(random(0, MAX_CSHV_VALUE), MAX_CSHV_VALUE, MAX_CSHV_VALUE));
 				}
 
 				last_iteration = millis();
@@ -582,7 +584,7 @@ namespace Effects
 					// Do the coloring
 					if (high_intensity_hexes[i].move_change.next == high_intensity_hexes[i].move_change.current)
 					{
-						hex->set_color(CHSV(Change::get_current_value(high_intensity_hexes->color_change), 255, 255));
+						hex->set_color(CHSV(Change::get_current_value(high_intensity_hexes->color_change), MAX_CSHV_VALUE, MAX_CSHV_VALUE));
 					}
 					else
 					{
@@ -610,8 +612,8 @@ namespace Effects
 
 								float scaled_proximity = distance_to_center > LOWEST_BRIGTHENESS_CENTER_DISTANCE ? 0 : 1 - (distance_to_center - PEAK_BRIGHTNESS_CENTER_DISTANCE) / (LOWEST_BRIGTHENESS_CENTER_DISTANCE - PEAK_BRIGHTNESS_CENTER_DISTANCE);
 								CHSV background_color = CHSV(Change::get_current_value(background_colors[hex_index]), BACKGROUND_LIGHTNESS, BACKGROUND_SATURATION);
-								CHSV foreground_color = CHSV(Change::get_current_value(high_intensity_hexes[i].color_change), 255, 255);
-								hex->set_at_index(k, Util::fade_towards_color(background_color, foreground_color, scaled_proximity * 255));
+								CHSV foreground_color = CHSV(Change::get_current_value(high_intensity_hexes[i].color_change), MAX_CSHV_VALUE, MAX_CSHV_VALUE);
+								hex->set_at_index(k, Util::fade_towards_color(background_color, foreground_color, scaled_proximity * MAX_CSHV_VALUE));
 							}
 						}
 					}
@@ -710,7 +712,7 @@ namespace Effects
 	bool enabled = true;
 	bool enabling = false;
 	bool disabling = false;
-	int state_change_progress = 255;
+	int state_change_progress = MAX_CSHV_VALUE;
 	unsigned long state_change_start = millis();
 	void enable()
 	{
@@ -736,7 +738,7 @@ namespace Effects
 		if (ENABLE_FADE_OUT)
 		{
 			disabling = true;
-			state_change_progress = 255;
+			state_change_progress = MAX_CSHV_VALUE;
 			state_change_start = millis();
 		}
 		else
@@ -762,16 +764,16 @@ namespace Effects
 				double percentage_transition_complete = Util::divide(time_passed, STATE_CHANGE_TIME);
 				if (enabling)
 				{
-					state_change_progress = percentage_transition_complete * 255;
+					state_change_progress = percentage_transition_complete * MAX_CSHV_VALUE;
 					if (time_passed >= STATE_CHANGE_TIME)
 					{
-						state_change_progress = 255;
+						state_change_progress = MAX_CSHV_VALUE;
 						enabling = false;
 					}
 				}
 				else if (disabling)
 				{
-					state_change_progress = 255 - (percentage_transition_complete * 255);
+					state_change_progress = MAX_CSHV_VALUE - (percentage_transition_complete * MAX_CSHV_VALUE);
 					if (time_passed >= STATE_CHANGE_TIME)
 					{
 						state_change_progress = 0;
@@ -782,7 +784,7 @@ namespace Effects
 					}
 				}
 
-				if (state_change_progress != 255)
+				if (state_change_progress != MAX_CSHV_VALUE)
 				{
 					FastLED.show(state_change_progress);
 					return;

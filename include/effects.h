@@ -24,6 +24,8 @@ namespace Effects
 	void enable();
 
 	void disable();
+
+	bool is_enabled();
 	
 	void loop();
 }

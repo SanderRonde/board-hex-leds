@@ -749,6 +749,10 @@ namespace Effects
 		}
 	}
 
+	bool is_enabled() {
+		return enabled;
+	}
+
 	void loop()
 	{
 		if (animating && enabled && animation_fn)

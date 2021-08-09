@@ -30,7 +30,7 @@ namespace API
 		return server.hasArg(String(arg));
 	}
 
-		bool require_args(const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char* arg5)
+	bool require_args(const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
 	{
 		if (!has_single_arg(arg1) || !has_single_arg(arg2) || !has_single_arg(arg3) || !has_single_arg(arg4) || !has_single_arg(arg5))
 		{
@@ -233,11 +233,29 @@ namespace API
 		respond_succes();
 	}
 
+	void handle_is_on()
+	{
+		log_request();
+		bool is_enabled = Effects::is_enabled();
+		String response = "{\"enabled\": ";
+		if (is_enabled)
+		{
+			response += "true";
+		}
+		else
+		{
+			response += "false";
+		}
+		response += "}";
+		server.send(200, "text/json", response.c_str());
+	}
+
 	void setup()
 	{
 
 		server.begin(SERVER_PORT);
 		server.on("/", HTTP_GET, handle_root);
+		server.on("/is_on", HTTP_POST, handle_is_on);
 		server.on("/on", HTTP_POST, handle_on);
 		server.on("/off", HTTP_POST, handle_off);
 		server.on("/set_led_in_hex", HTTP_POST, handle_set_led_in_hex);

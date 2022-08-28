@@ -146,10 +146,8 @@ size_t num_hexes = sizeof(described_hexes) / sizeof(hex_describer_t);
 
 namespace HexNS
 {
-	void setup()
+	Hexes* setup()
 	{
-		hexes = Hexes::from_described(described_hexes, num_hexes);
+		return Hexes::from_described(described_hexes, num_hexes);
 	}
-
-	Hexes *hexes;
 };

@@ -20,6 +20,6 @@ private:
 	split_color_t _colors[HEXES_UPPERBOUND];
 
 public:
-	RandomColorsGradual(RequestObj *request);
-	bool loop() override;
+	RandomColorsGradual(Hexes *hexes, RequestObj *request);
+	bool loop(Hexes *hexes) override;
 };

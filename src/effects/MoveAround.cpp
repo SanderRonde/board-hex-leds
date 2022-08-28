@@ -14,11 +14,11 @@ int MoveAround::random_except(int min, int max, int except)
 	return random_num;
 }
 
-int MoveAround::choose_new_move_direction(int current_target)
+int MoveAround::choose_new_move_direction(Hexes *hexes, int current_target)
 {
 	int iterations = 0;
 
-	HexNS::hex_side_t random_direction;
+	hex_side_t random_direction;
 	while (true)
 	{
 		iterations++;
@@ -27,9 +27,9 @@ int MoveAround::choose_new_move_direction(int current_target)
 		{
 			return -1;
 		}
-		random_direction = (HexNS::hex_side_t)random(0, HEX_SIDES);
+		random_direction = (hex_side_t)random(0, HEX_SIDES);
 
-		HexNS::Hex *target = HexNS::hexes->get_by_id(current_target)->get_neighbour(random_direction);
+		Hex *target = hexes->get_by_id(current_target)->get_neighbour(random_direction);
 
 		// Check if the neighbour exists
 		if (target == NULL)
@@ -52,18 +52,18 @@ int MoveAround::choose_new_move_direction(int current_target)
 	}
 }
 
-change_t MoveAround::set_new_move_target(int current_id)
+change_t MoveAround::set_new_move_target(Hexes *hexes, int current_id)
 {
 	change_t move_change;
 	move_change.current = current_id;
-	int move_direction = choose_new_move_direction(current_id);
+	int move_direction = choose_new_move_direction(hexes, current_id);
 	if (move_direction == -1)
 	{
 		move_change.next = current_id;
 	}
 	else
 	{
-		move_change.next = HexNS::hexes->get_by_id(current_id)->get_neighbour((HexNS::hex_side_t)move_direction)->id;
+		move_change.next = hexes->get_by_id(current_id)->get_neighbour((hex_side_t)move_direction)->id;
 	}
 
 	move_change.progress = 0;
@@ -71,7 +71,7 @@ change_t MoveAround::set_new_move_target(int current_id)
 	return move_change;
 }
 
-int MoveAround::get_direction_angle(HexNS::hex_side_t direction)
+int MoveAround::get_direction_angle(hex_side_t direction)
 {
 	return (direction * ANGLE_PER_SIDE) + (ANGLE_PER_SIDE / 2);
 }
@@ -108,14 +108,14 @@ int MoveAround::get_distance_between_led_and_center(float center_progress, int c
 	return sqrt16(BC_squared);
 }
 
-MoveAround::MoveAround() : EffectBase()
+MoveAround::MoveAround(Hexes *hexes) : EffectBase()
 {
 	change_t prev;
 	prev.next = 0;
 #ifdef MOVE_SAME_BACKGROUND
 	_background_colors[0] = Change::set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
 #else
-	for (int i = 0; i < HexNS::hexes->num_hexes; i++)
+	for (int i = 0; i < hexes->num_hexes; i++)
 	{
 		_background_colors[i] = set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
 	}
@@ -129,7 +129,7 @@ MoveAround::MoveAround() : EffectBase()
 		do
 		{
 			hex_taken = false;
-			hex->index = random(0, HexNS::hexes->num_hexes);
+			hex->index = random(0, hexes->num_hexes);
 			for (int j = 0; j < i; j++)
 			{
 				if (_high_intensity_hexes[j].index == hex->index)
@@ -140,10 +140,10 @@ MoveAround::MoveAround() : EffectBase()
 			}
 		} while (hex_taken);
 		hex->color_change = Change::set_new_color_target(prev, BACKGROUND_COLOR_CHANGE_MIN, BACKGROUND_COLOR_CHANGE_MAX);
-		hex->move_side = (HexNS::hex_side_t)random(0, HEX_SIDES);
+		hex->move_side = (hex_side_t)random(0, HEX_SIDES);
 		change_t move_change;
 		move_change.current = hex->index;
-		move_change.next = random_except(0, HexNS::hexes->num_hexes, hex->index);
+		move_change.next = random_except(0, hexes->num_hexes, hex->index);
 		move_change.progress = 0;
 		move_change.total = random(MOVE_CHANGE_MIN, MOVE_CHANGE_MAX);
 		hex->move_change = move_change;
@@ -152,20 +152,20 @@ MoveAround::MoveAround() : EffectBase()
 	_last_iteration = millis();
 }
 
-bool MoveAround::loop()
+bool MoveAround::loop(Hexes *hexes)
 {
 	long long time_diff = millis() - _last_iteration;
 	_last_iteration = millis();
 
 	// Paint backgrounds
 #ifndef MOVE_SAME_BACKGROUND
-	for (int hex_idx = 0; hex_idx < HexNS::hexes->num_hexes; hex_idx++)
+	for (int hex_idx = 0; hex_idx < hexes->num_hexes; hex_idx++)
 	{
 #endif
 #ifdef MOVE_SAME_BACKGROUND
 		int hex_idx = 0;
 #endif
-		HexNS::Hex *hex = HexNS::hexes->get_by_index(hex_idx);
+		Hex *hex = hexes->get_by_index(hex_idx);
 		_background_colors[hex_idx].progress += time_diff;
 		if (_background_colors[hex_idx].progress > _background_colors[hex_idx].total)
 		{
@@ -176,9 +176,9 @@ bool MoveAround::loop()
 		// Find color
 		int current_hue = Change::get_current_value(_background_colors[hex_idx]);
 #ifdef MOVE_SAME_BACKGROUND
-		for (int i = 0; i < HexNS::hexes->num_hexes; i++)
+		for (int i = 0; i < hexes->num_hexes; i++)
 		{
-			hex = HexNS::hexes->get_by_index(i);
+			hex = hexes->get_by_index(i);
 #endif
 			hex->set_color(CHSV(current_hue, BACKGROUND_SATURATION, BACKGROUND_LIGHTNESS));
 #ifdef MOVE_SAME_BACKGROUND
@@ -190,7 +190,7 @@ bool MoveAround::loop()
 
 	for (int i = 0; i < NUM_HIGH_INTENSITY_HEXES; i++)
 	{
-		HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
+		Hex *hex = hexes->get_by_index(i);
 
 		// Do color change
 		_high_intensity_hexes[i].color_change.progress += time_diff;
@@ -205,7 +205,7 @@ bool MoveAround::loop()
 		if (_high_intensity_hexes[i].move_change.progress > _high_intensity_hexes[i].move_change.total)
 		{
 			// Choose a new move target
-			_high_intensity_hexes[i].move_change = set_new_move_target(_high_intensity_hexes[i].move_change.next);
+			_high_intensity_hexes[i].move_change = set_new_move_target(hexes, _high_intensity_hexes[i].move_change.next);
 		}
 
 		// Do the coloring
@@ -232,7 +232,7 @@ bool MoveAround::loop()
 				}
 				int hex_index = j == 0 ? _high_intensity_hexes[i].move_change.current : _high_intensity_hexes[i].move_change.next;
 
-				hex = HexNS::hexes->get_by_index(i);
+				hex = hexes->get_by_index(i);
 				for (int k = 0; k < hex->num_leds; k++)
 				{
 					int distance_to_center = get_distance_between_led_and_center(progress, side_angle, hex->get_angle_at_index(k));

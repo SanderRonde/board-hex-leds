@@ -9,7 +9,8 @@
 #include <net.h>
 #include <hex.h>
 
-void setup() {
+void setup()
+{
 	Serial.begin(115200);
 	Serial.println("Booting");
 
@@ -26,13 +27,16 @@ void setup() {
 	Net::setup();
 	API::setup();
 	Leds::setup();
-	HexNS::setup();
+	Hexes *hexes = HexNS::setup();
+	Effects::setup(hexes);
 
 	// Done
 	LOGN("Booted");
+	FastLED.showColor(CRGB::Black);
 }
 
-void loop() {
+void loop()
+{
 	OTA::loop();
 	Telnet::loop();
 	API::loop();

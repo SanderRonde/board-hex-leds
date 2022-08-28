@@ -13,7 +13,7 @@ struct high_intensity_hex
 	int index;
 
 	change_t move_change;
-	HexNS::hex_side_t move_side;
+	hex_side_t move_side;
 
 	change_t color_change;
 };
@@ -27,13 +27,13 @@ private:
 	long long _last_iteration;
 
 	int random_except(int min, int max, int except);
-	int choose_new_move_direction(int current_target);
-	change_t set_new_move_target(int current_id);
-	int get_direction_angle(HexNS::hex_side_t direction);
+	int choose_new_move_direction(Hexes *hexes, int current_target);
+	change_t set_new_move_target(Hexes *hexes, int current_id);
+	int get_direction_angle(hex_side_t direction);
 	int mod_positive(int base, int modulo);
 	int get_distance_between_led_and_center(float center_progress, int center_angle, int led_angle);
 
 public:
-	MoveAround();
-	bool loop() override;
+	MoveAround(Hexes *hexes);
+	bool loop(Hexes *hexes) override;
 };

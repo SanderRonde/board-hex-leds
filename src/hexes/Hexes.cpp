@@ -1,7 +1,8 @@
 #include <hex.h>
+#include "leds.h"
 #include <telnet.h>
 
-HexNS::Hex *HexNS::Hexes::get_by_id(int id)
+Hex *Hexes::get_by_id(int id)
 {
 	for (int i = 0; i < num_hexes; i++)
 	{
@@ -13,23 +14,28 @@ HexNS::Hex *HexNS::Hexes::get_by_id(int id)
 	return NULL;
 }
 
-HexNS::Hex *HexNS::Hexes::get_by_index(int index)
+Hex *Hexes::get_by_index(int index)
 {
 	return _hexes[index];
 }
 
-HexNS::Hexes::Hexes(HexNS::Hex **passed_hexes, unsigned int passed_num_hexes)
+void Hexes::set_led_at_index(int index, CRGB color)
+{
+	Leds::leds[index] = color;
+}
+
+Hexes::Hexes(Hex **passed_hexes, unsigned int passed_num_hexes)
 {
 	_hexes = passed_hexes;
 	num_hexes = passed_num_hexes;
 };
 
-HexNS::Hexes::~Hexes()
+Hexes::~Hexes()
 {
 	free(_hexes);
 }
 
-HexNS::Hexes *HexNS::Hexes::from_described(const hex_describer_t hexes[], size_t num_hexes)
+Hexes *Hexes::from_described(const hex_describer_t hexes[], size_t num_hexes)
 {
 	Hex **created_hexes = (Hex **)malloc(sizeof(Hex *) * num_hexes);
 	for (size_t i = 0; i < num_hexes; i++)

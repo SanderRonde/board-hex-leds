@@ -1,274 +1,312 @@
-#include <net.h>
+#include "net.h"
 #include <effects.h>
 #include <telnet.h>
+#include <FastLED.h>
 
 #define SERVER_PORT 80
 
+class MissingArgException : public std::exception
+{
+public:
+	const char *arg_name;
+	MissingArgException(const char *arg_name_) : arg_name(arg_name_) {}
+};
+
+class RequestObj
+{
+private:
+	ESP***REMOVED***WebServer *_server;
+
+	CRGB _parse_color(String color)
+	{
+		CRGB color_obj;
+		char red[3];
+		char green[3];
+		char blue[3];
+
+		const char *color_c_str = color.c_str();
+		strncpy(red, color_c_str + 1, 2);
+		strncpy(green, color_c_str + 3, 2);
+		strncpy(blue, color_c_str + 5, 2);
+		red[2] = green[2] = blue[2] = '\n';
+		color_obj.r = strtol(red, NULL, 16);
+		color_obj.g = strtol(green, NULL, 16);
+		color_obj.b = strtol(blue, NULL, 16);
+
+		return color_obj;
+	}
+
+public:
+	RequestObj(ESP***REMOVED***WebServer *server) : _server(server) {}
+
+	int intv(const char *arg_name, int default_val = -999)
+	{
+		if (!_server->hasArg(String(arg_name)))
+		{
+			if (default_val != -999)
+			{
+				return default_val;
+			}
+			throw MissingArgException(arg_name);
+		}
+
+		return atoi(_server->arg(arg_name).c_str());
+	}
+
+	bool boolv(const char *arg_name)
+	{
+		if (!_server->hasArg(String(arg_name)))
+		{
+			throw MissingArgException(arg_name);
+		}
+
+		return _server->arg(arg_name) == "true";
+	}
+
+	CRGB colorv(const char *arg_name, const char *default_val = "")
+	{
+		if (!_server->hasArg(String(arg_name)))
+		{
+			if (strlen(default_val) != 0)
+			{
+				return _parse_color(default_val);
+			}
+			throw MissingArgException(arg_name);
+		}
+
+		return _parse_color(_server->arg(arg_name).c_str());
+	}
+};
+
+class ResponseObj
+{
+private:
+	ESP***REMOVED***WebServer *_server;
+
+public:
+	ResponseObj(ESP***REMOVED***WebServer *server) : _server(server) {}
+
+public:
+	int success()
+	{
+		_server->send(200, "application/json", "{\"success\": true}");
+		return 0;
+	}
+
+	int success_plain(std::string response)
+	{
+		_server->send(200, "text/plain", response.c_str());
+		return 0;
+	}
+
+	int success_json(std::string response)
+	{
+		_server->send(200, "application/json", response.c_str());
+		return 0;
+	}
+
+	int not_found()
+	{
+		_server->send(404, "text/plain", "Not found");
+		return 0;
+	}
+
+	int err(std::string err)
+	{
+		_server->send(400, "text/plain", err.c_str());
+		return 0;
+	}
+};
+
+class RequestDataContainer
+{
+public:
+	ESP***REMOVED***WebServer *server;
+	RequestObj *request;
+	ResponseObj *response;
+
+	RequestDataContainer(ESP***REMOVED***WebServer *server_,
+											 RequestObj *request_,
+											 ResponseObj *response_) : server(server_), request(request_), response(response_)
+	{
+	}
+};
+
+class APIRequestHandler
+{
+protected:
+	RequestObj *_request;
+	ResponseObj *_response;
+	ESP***REMOVED***WebServer *_server;
+	static std::function<void()> _route(RequestDataContainer *self, int (*handler)(RequestObj *, ResponseObj *))
+	{
+		return [=]() -> void
+		{
+			try
+			{
+				LOGF("Got request for URI: %s with %d args\n", self->server->uri().c_str(), self->server->args());
+				for (int i = 0; i < self->server->args(); i++) {
+					LOGF("\t[%s]: %s\n", self->server->argName(i).c_str(), self->server->arg(i).c_str());
+				}
+				handler(self->request, self->response);
+			}
+			catch (MissingArgException missing_arg_e)
+			{
+				std::string err = "Argument ";
+				err += missing_arg_e.arg_name;
+				err += " is missing";
+				LOGF("%s\n", err.c_str());
+				self->response->err(err);
+			}
+		};
+	}
+
+public:
+	APIRequestHandler(ESP***REMOVED***WebServer *server) : _server(server)
+	{
+		_request = new RequestObj(server);
+		_response = new ResponseObj(server);
+	};
+	~APIRequestHandler()
+	{
+		free(_request);
+		free(_response);
+	};
+};
+
+class RequestHandlerWithRoutes : protected APIRequestHandler
+{
+private:
+	RequestDataContainer *_container;
+
+	static int _route_root(RequestObj *request, ResponseObj *response)
+	{
+		return response->success_plain("Hi!");
+	}
+
+	static int _route_is_on(RequestObj *request, ResponseObj *response)
+	{
+		bool is_enabled = Effects::is_enabled();
+		std::string enabled_str = is_enabled ? "true" : "false";
+		std::string json = "{\"enabled\": " + enabled_str + "}";
+		return response->success_json(json);
+	}
+
+	static int _route_off(RequestObj *request, ResponseObj *response)
+	{
+		Effects::disable();
+		return response->success();
+	}
+
+	static int _route_on(RequestObj *request, ResponseObj *response)
+	{
+		Effects::enable();
+		return response->success();
+	}
+
+	static int _route_set_led_in_hex(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::set_led_in_hex(request->intv("index"), request->intv("hex_id"), request->colorv("color"));
+		return response->success();
+	}
+
+	static int _route_set_led(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::set_led(request->intv("num"), request->colorv("color"));
+		return response->success();
+	}
+
+	static int _route_set_hex(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::set_hex(request->intv("hex_id"), request->colorv("color"));
+		return response->success();
+	}
+
+	static int _route_set_all(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::set_all(request->colorv("color"));
+		return response->success();
+	}
+
+	static int _route_set_rainbow(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::enable_rainbow(request->intv("revolve_time"));
+		return response->success();
+	}
+
+	static int _route_set_edge_rainbow(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::enable_edge_rainbow(request->intv("revolve_time"));
+		return response->success();
+	}
+
+	static int _route_set_move(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::move_around();
+		return response->success();
+	}
+
+	static int _route_set_random_colors_gradual(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::random_colors_gradual(
+				request->intv("wait_time_min"),
+				request->intv("wait_time_max"),
+				request->intv("neighbour_influence"),
+				request->boolv("use_pastel"),
+				request->boolv("use_split"));
+		return response->success();
+	}
+
+	static int _route_set_random_colors(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::random_colors(request->intv("wait_time"));
+		return response->success();
+	}
+
+	static int _route_not_found(RequestObj *request, ResponseObj *response)
+	{
+		return response->not_found();
+	}
+
+public:
+	RequestHandlerWithRoutes(ESP***REMOVED***WebServer *server) : APIRequestHandler(server)
+	{
+		_container = new RequestDataContainer(_server, _request, _response);
+	}
+
+	~RequestHandlerWithRoutes()
+	{
+		free(_container);
+	}
+
+	void listen()
+	{
+		_server->begin(SERVER_PORT);
+		_server->on("/", HTTP_GET, _route(_container, _route_root));
+		_server->on("/is_on", HTTP_POST, _route(_container, _route_is_on));
+		_server->on("/on", HTTP_POST, _route(_container, _route_on));
+		_server->on("/off", HTTP_POST, _route(_container, _route_off));
+		_server->on("/set_led_in_hex", HTTP_POST, _route(_container, _route_set_led_in_hex));
+		_server->on("/set_led", HTTP_POST, _route(_container, _route_set_led));
+		_server->on("/set_hex", HTTP_POST, _route(_container, _route_set_hex));
+		_server->on("/set_all", HTTP_POST, _route(_container, _route_set_all));
+		_server->on("/effects/rainbow", HTTP_POST, _route(_container, _route_set_rainbow));
+		_server->on("/effects/edge_rainbow", HTTP_POST, _route(_container, _route_set_edge_rainbow));
+		_server->on("/effects/move", HTTP_POST, _route(_container, _route_set_move));
+		_server->on("/effects/random_colors_gradual", HTTP_POST, _route(_container, _route_set_random_colors_gradual));
+		_server->on("/effects/random_colors", HTTP_POST, _route(_container, _route_set_random_colors));
+		_server->onNotFound(_route(_container, _route_not_found));
+	}
+};
+
 namespace API
 {
-	ESP***REMOVED***WebServer server(80);
-
-	inline void respond_succes()
-	{
-		server.send(200, "text/json", "{\"success\": true}");
-	}
-
-	inline void respond_invalid_request()
-	{
-		server.send(400, "text/plain", "400: Invalid request");
-	}
-
-	inline int get_num_arg(String arg_name)
-	{
-		return atoi(server.arg(arg_name).c_str());
-	}
-
-	bool has_single_arg(const char *arg)
-	{
-		if (arg == NULL)
-			return true;
-		return server.hasArg(String(arg));
-	}
-
-	bool require_args(const char *arg1, const char *arg2, const char *arg3, const char *arg4, const char *arg5)
-	{
-		if (!has_single_arg(arg1) || !has_single_arg(arg2) || !has_single_arg(arg3) || !has_single_arg(arg4) || !has_single_arg(arg5))
-		{
-			respond_invalid_request();
-			return false;
-		}
-		return true;
-	}
-
-	bool require_args(const char *arg1, const char *arg2, const char *arg3, const char *arg4)
-	{
-		return require_args(arg1, arg2, arg3, arg4, NULL);
-	}
-
-	bool require_args(const char *arg1, const char *arg2, const char *arg3)
-	{
-		return require_args(arg1, arg2, arg3, NULL);
-	}
-
-	bool require_args(const char *arg1, const char *arg2)
-	{
-		return require_args(arg1, arg2, NULL);
-	}
-
-	bool require_args(const char *arg1)
-	{
-		return require_args(arg1, NULL);
-	}
-
-	inline void log_request()
-	{
-		LOGF("Got request for URI: %s with %d args\n", server.uri().c_str(), server.args());
-	}
-
-	void handle_root()
-	{
-		log_request();
-		server.send(200, "text/plain", "Hi!");
-	}
-
-	void handle_not_found()
-	{
-		log_request();
-		server.send(404, "text/plain", "404: Not found");
-	}
-
-	void handle_set_led()
-	{
-		log_request();
-		if (!server.hasArg("num") ||
-				(!server.hasArg("color") && !server.hasArg("power")))
-		{
-			respond_invalid_request();
-			return;
-		}
-
-		if (server.hasArg("power") && server.arg("power") == "off")
-		{
-			Effects::Effects::set_led(get_num_arg("num"), "#000000");
-		}
-		else
-		{
-			Effects::Effects::set_led(get_num_arg("num"), server.arg("color"));
-		}
-
-		respond_succes();
-	}
-
-	void handle_set_led_in_hex()
-	{
-		log_request();
-		if (!server.hasArg("index") || !server.hasArg("hex_id") ||
-				(!server.hasArg("color") && !server.hasArg("power")))
-		{
-			respond_invalid_request();
-			return;
-		}
-
-		if (server.hasArg("power") && server.arg("power") == "off")
-		{
-			Effects::Effects::set_led_in_hex(get_num_arg("index"), get_num_arg("hex_id"), "#000000");
-		}
-		else
-		{
-			Effects::Effects::set_led_in_hex(get_num_arg("index"), get_num_arg("hex_id"), server.arg("color"));
-		}
-
-		respond_succes();
-	}
-
-	void handle_set_hex()
-	{
-		log_request();
-		if (!server.hasArg("hex_id") ||
-				(!server.hasArg("color") && !server.hasArg("power")))
-		{
-			respond_invalid_request();
-			return;
-		}
-
-		if (server.hasArg("power") && server.arg("power") == "off")
-		{
-			Effects::Effects::set_hex(get_num_arg("hex_id"), "#000000");
-		}
-		else
-		{
-			Effects::Effects::set_hex(get_num_arg("hex_id"), server.arg("color"));
-		}
-
-		respond_succes();
-	}
-
-	void handle_set_all()
-	{
-		log_request();
-		if (!require_args("color"))
-			return;
-
-		if (server.hasArg("power") && server.arg("power") == "off")
-		{
-			Effects::Effects::set_all("#000000");
-		}
-		else
-		{
-			Effects::Effects::set_all(server.arg("color"));
-		}
-
-		respond_succes();
-	}
-
-	void handle_set_rainbow()
-	{
-		log_request();
-		if (!require_args("revolve_time"))
-			return;
-
-		Effects::Effects::enable_rainbow(get_num_arg("revolve_time"));
-
-		respond_succes();
-	}
-
-	void handle_set_edge_rainbow()
-	{
-		log_request();
-
-		if (!require_args("revolve_time"))
-			return;
-
-		Effects::Effects::enable_edge_rainbow(get_num_arg("revolve_time"));
-
-		respond_succes();
-	}
-
-	void handle_set_move()
-	{
-		log_request();
-		Effects::Effects::move_around();
-
-		respond_succes();
-	}
-
-	void handle_set_random_colors_gradual()
-	{
-		log_request();
-		if (!require_args("wait_time_min", "wait_time_max", "neighbour_influence", "use_pastel", "use_split"))
-			return;
-
-		int wait_time_min = get_num_arg("wait_time_min");
-		int wait_time_max = get_num_arg("wait_time_max");
-		int neighbour_influence = get_num_arg("neighbour_influence");
-		bool use_pastel = server.arg("use_pastel") == "true";
-		bool use_split = server.arg("use_split") == "true";
-		Effects::Effects::random_colors_gradual(wait_time_min, wait_time_max, neighbour_influence, use_pastel, use_split);
-
-		respond_succes();
-	}
-
-	void handle_set_random_colors()
-	{
-		log_request();
-		if (!require_args("wait_time"))
-			return;
-
-		Effects::Effects::random_colors(get_num_arg("wait_time"));
-
-		respond_succes();
-	}
-
-	void handle_off()
-	{
-		log_request();
-		Effects::disable();
-		respond_succes();
-	}
-
-	void handle_on()
-	{
-		log_request();
-		Effects::enable();
-		respond_succes();
-	}
-
-	void handle_is_on()
-	{
-		log_request();
-		bool is_enabled = Effects::is_enabled();
-		String response = "{\"enabled\": ";
-		if (is_enabled)
-		{
-			response += "true";
-		}
-		else
-		{
-			response += "false";
-		}
-		response += "}";
-		server.send(200, "text/json", response.c_str());
-	}
+	ESP***REMOVED***WebServer server(SERVER_PORT);
+	RequestHandlerWithRoutes router(&server);
 
 	void setup()
 	{
-
-		server.begin(SERVER_PORT);
-		server.on("/", HTTP_GET, handle_root);
-		server.on("/is_on", HTTP_POST, handle_is_on);
-		server.on("/on", HTTP_POST, handle_on);
-		server.on("/off", HTTP_POST, handle_off);
-		server.on("/set_led_in_hex", HTTP_POST, handle_set_led_in_hex);
-		server.on("/set_led", HTTP_POST, handle_set_led);
-		server.on("/set_hex", HTTP_POST, handle_set_hex);
-		server.on("/set_all", HTTP_POST, handle_set_all);
-		server.on("/effects/rainbow", HTTP_POST, handle_set_rainbow);
-		server.on("/effects/edge_rainbow", HTTP_POST, handle_set_edge_rainbow);
-		server.on("/effects/move", HTTP_POST, handle_set_move);
-		server.on("/effects/random_colors_gradual", HTTP_POST, handle_set_random_colors_gradual);
-		server.on("/effects/random_colors", HTTP_POST, handle_set_random_colors);
-		server.onNotFound(handle_not_found);
-
+		router.listen();
 		LOGF("Server listening on port %d\n", SERVER_PORT);
 	}
 

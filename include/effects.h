@@ -24,6 +24,8 @@ namespace Effects
 		void random_colors_gradual(RequestObj *request);
 
 		void random_colors(RequestObj *request);
+
+		void fade(RequestObj *request);
 	}
 
 	void enable();

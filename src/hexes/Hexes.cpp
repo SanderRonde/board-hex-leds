@@ -1,6 +1,7 @@
 #include <hex.h>
 #include "leds.h"
-#include <telnet.h>
+
+using namespace std;
 
 Hex *Hexes::get_by_id(int id)
 {
@@ -24,6 +25,36 @@ void Hexes::set_led_at_index(int index, CRGB color)
 	Leds::leds[index] = color;
 }
 
+int Hexes::get_x_max_pos()
+{
+	int max_value = 0;
+	for (const auto &pair : _positions->hex_positions_x)
+	{
+		max_value = max(max_value, pair.second);
+	}
+	return max_value;
+}
+
+int Hexes::get_y_max_pos()
+{
+	int max_value = 0;
+	for (const auto &pair : _positions->hex_positions_y)
+	{
+		max_value = max(max_value, pair.second);
+	}
+	return max_value;
+}
+
+int Hexes::get_x_pos_for_index(int index)
+{
+	return _positions->hex_positions_x[index];
+}
+
+int Hexes::get_y_pos_for_index(int index)
+{
+	return _positions->hex_positions_y[index];
+}
+
 Hexes::Hexes(Hex **passed_hexes, unsigned int passed_num_hexes)
 {
 	_hexes = passed_hexes;
@@ -33,6 +64,7 @@ Hexes::Hexes(Hex **passed_hexes, unsigned int passed_num_hexes)
 Hexes::~Hexes()
 {
 	free(_hexes);
+	free(_positions);
 }
 
 Hexes *Hexes::from_described(const hex_describer_t hexes[], size_t num_hexes)
@@ -49,6 +81,8 @@ Hexes *Hexes::from_described(const hex_describer_t hexes[], size_t num_hexes)
 		(*created_hexes[i]).parent = hexes_cls;
 		(*created_hexes[i]).index = i;
 	}
+
+	hexes_cls->_positions = new HexPositions(hexes_cls);
 
 	return hexes_cls;
 }

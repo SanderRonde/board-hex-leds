@@ -13,10 +13,14 @@ class RequestObj
 private:
 	ESP***REMOVED***WebServer *_server;
 	CRGB _parse_color(String color);
+	void _err(const char* arg_name);
 
 public:
 	RequestObj(ESP***REMOVED***WebServer *server);
 	int intv(const char *arg_name, int default_val = -999);
+	String stringv(const char *arg_name);
+	bool assert_has(std::initializer_list<const char*> list);
+	bool has(const char* arg_name);
 	bool boolv(const char *arg_name);
 	CRGB colorv(const char *arg_name, const char *default_val = "");
 };

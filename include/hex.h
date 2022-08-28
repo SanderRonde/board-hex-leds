@@ -3,7 +3,6 @@
 #ifndef HEXES_H
 #define HEXES_H
 
-#include <ArduinoJson.h>
 #include <FastLED.h>
 
 #define HEX_SIDES 6

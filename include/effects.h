@@ -1,26 +1,29 @@
+#pragma once
 #include <FastLED.h>
+#include "api.h"
+#include "hex.h"
 
 namespace Effects
 {
 	namespace Effects
 	{
-		void set_led(int index, CRGB color);
+		void set_led(RequestObj *request);
 
-		void set_led_in_hex(int index, int hex_id, CRGB color);
+		void set_led_in_hex(RequestObj *request);
 
-		void set_hex(int hex_id, CRGB color);
+		void set_hex(RequestObj *request);
 
-		void enable_rainbow(int revolve_time);
+		void enable_rainbow(RequestObj *request);
 
-		void enable_edge_rainbow(int revolve_time);
+		void enable_edge_rainbow(RequestObj *request);
 
-		void set_all(CRGB str_color);
+		void set_all(RequestObj *request);
 
 		void move_around();
 
-		void random_colors_gradual(int wait_time_min, int wait_time_max, int neighbour_influence, bool use_pastel, bool split);
+		void random_colors_gradual(RequestObj *request);
 
-		void random_colors(int wait_time);
+		void random_colors(RequestObj *request);
 	}
 
 	void enable();

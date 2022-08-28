@@ -12,71 +12,64 @@ public:
 	MissingArgException(const char *arg_name_) : arg_name(arg_name_) {}
 };
 
-class RequestObj
+CRGB RequestObj::_parse_color(String color)
 {
-private:
-	ESP***REMOVED***WebServer *_server;
+	CRGB color_obj;
+	char red[3];
+	char green[3];
+	char blue[3];
 
-	CRGB _parse_color(String color)
+	const char *color_c_str = color.c_str();
+	strncpy(red, color_c_str + 1, 2);
+	strncpy(green, color_c_str + 3, 2);
+	strncpy(blue, color_c_str + 5, 2);
+	red[2] = green[2] = blue[2] = '\n';
+	color_obj.r = strtol(red, NULL, 16);
+	color_obj.g = strtol(green, NULL, 16);
+	color_obj.b = strtol(blue, NULL, 16);
+
+	return color_obj;
+}
+
+RequestObj::RequestObj(ESP***REMOVED***WebServer *server) : _server(server) {}
+
+int RequestObj::intv(const char *arg_name, int default_val)
+{
+	if (!_server->hasArg(String(arg_name)))
 	{
-		CRGB color_obj;
-		char red[3];
-		char green[3];
-		char blue[3];
-
-		const char *color_c_str = color.c_str();
-		strncpy(red, color_c_str + 1, 2);
-		strncpy(green, color_c_str + 3, 2);
-		strncpy(blue, color_c_str + 5, 2);
-		red[2] = green[2] = blue[2] = '\n';
-		color_obj.r = strtol(red, NULL, 16);
-		color_obj.g = strtol(green, NULL, 16);
-		color_obj.b = strtol(blue, NULL, 16);
-
-		return color_obj;
-	}
-
-public:
-	RequestObj(ESP***REMOVED***WebServer *server) : _server(server) {}
-
-	int intv(const char *arg_name, int default_val = -999)
-	{
-		if (!_server->hasArg(String(arg_name)))
+		if (default_val != -999)
 		{
-			if (default_val != -999)
-			{
-				return default_val;
-			}
-			throw MissingArgException(arg_name);
+			return default_val;
 		}
-
-		return atoi(_server->arg(arg_name).c_str());
+		throw MissingArgException(arg_name);
 	}
 
-	bool boolv(const char *arg_name)
+	return atoi(_server->arg(arg_name).c_str());
+}
+
+bool RequestObj::boolv(const char *arg_name)
+{
+	if (!_server->hasArg(String(arg_name)))
 	{
-		if (!_server->hasArg(String(arg_name)))
-		{
-			throw MissingArgException(arg_name);
-		}
-
-		return _server->arg(arg_name) == "true";
+		throw MissingArgException(arg_name);
 	}
 
-	CRGB colorv(const char *arg_name, const char *default_val = "")
+	return _server->arg(arg_name) == "true";
+}
+
+CRGB RequestObj::colorv(const char *arg_name, const char *default_val)
+{
+	if (!_server->hasArg(String(arg_name)))
 	{
-		if (!_server->hasArg(String(arg_name)))
+		if (strlen(default_val) != 0)
 		{
-			if (strlen(default_val) != 0)
-			{
-				return _parse_color(default_val);
-			}
-			throw MissingArgException(arg_name);
+			return _parse_color(default_val);
 		}
-
-		return _parse_color(_server->arg(arg_name).c_str());
+		throw MissingArgException(arg_name);
 	}
-};
+
+	return _parse_color(_server->arg(arg_name).c_str());
+}
 
 class ResponseObj
 {
@@ -145,7 +138,8 @@ protected:
 			try
 			{
 				LOGF("Got request for URI: %s with %d args\n", self->server->uri().c_str(), self->server->args());
-				for (int i = 0; i < self->server->args(); i++) {
+				for (int i = 0; i < self->server->args(); i++)
+				{
 					LOGF("\t[%s]: %s\n", self->server->argName(i).c_str(), self->server->arg(i).c_str());
 				}
 				handler(self->request, self->response);
@@ -206,37 +200,37 @@ private:
 
 	static int _route_set_led_in_hex(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::set_led_in_hex(request->intv("index"), request->intv("hex_id"), request->colorv("color"));
+		Effects::Effects::set_led_in_hex(request);
 		return response->success();
 	}
 
 	static int _route_set_led(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::set_led(request->intv("num"), request->colorv("color"));
+		Effects::Effects::set_led(request);
 		return response->success();
 	}
 
 	static int _route_set_hex(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::set_hex(request->intv("hex_id"), request->colorv("color"));
+		Effects::Effects::set_hex(request);
 		return response->success();
 	}
 
 	static int _route_set_all(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::set_all(request->colorv("color"));
+		Effects::Effects::set_all(request);
 		return response->success();
 	}
 
 	static int _route_set_rainbow(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::enable_rainbow(request->intv("revolve_time"));
+		Effects::Effects::enable_rainbow(request);
 		return response->success();
 	}
 
 	static int _route_set_edge_rainbow(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::enable_edge_rainbow(request->intv("revolve_time"));
+		Effects::Effects::enable_edge_rainbow(request);
 		return response->success();
 	}
 
@@ -248,18 +242,13 @@ private:
 
 	static int _route_set_random_colors_gradual(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::random_colors_gradual(
-				request->intv("wait_time_min"),
-				request->intv("wait_time_max"),
-				request->intv("neighbour_influence"),
-				request->boolv("use_pastel"),
-				request->boolv("use_split"));
+		Effects::Effects::random_colors_gradual(request);
 		return response->success();
 	}
 
 	static int _route_set_random_colors(RequestObj *request, ResponseObj *response)
 	{
-		Effects::Effects::random_colors(request->intv("wait_time"));
+		Effects::Effects::random_colors(request);
 		return response->success();
 	}
 

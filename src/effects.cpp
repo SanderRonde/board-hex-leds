@@ -60,13 +60,13 @@ namespace Effects
 
 	/**
 	 * This is the idea:
-	 * 
+	 *
 	 * Have a "background" that is filled with some low intensity
 	 * random colors.
-	 * 
+	 *
 	 * Have an X number of hexes turn into a high intensity color.
 	 * This color changes gradually over time. It also moves
-	 * from one hex to one next to it. 
+	 * from one hex to one next to it.
 	 */
 	typedef struct change
 	{
@@ -500,21 +500,21 @@ namespace Effects
 
 			/**
 			 * Reference triangle
-			* 		 ^ B
-			* 	  /  \
-			*   /     \
-			* A/________\ C
-			* 
-			* Say that the hex center point is A, the center
-			* of the color is at B and the LED is C.
-			* 
-			* We know AB (progress * 2R)
-			* We know AC (R)
-			* We know the angle of A (abs(center_point_angle - led_angle))
-			* 
-			* To calculate BC, we do the following
-			* BC^2 = AB^2 + AC^2 - 2(AB)(AC)cos(angle(A))
-			*/
+			 * 		 ^ B
+			 * 	  /  \
+			 *   /     \
+			 * A/________\ C
+			 *
+			 * Say that the hex center point is A, the center
+			 * of the color is at B and the LED is C.
+			 *
+			 * We know AB (progress * 2R)
+			 * We know AC (R)
+			 * We know the angle of A (abs(center_point_angle - led_angle))
+			 *
+			 * To calculate BC, we do the following
+			 * BC^2 = AB^2 + AC^2 - 2(AB)(AC)cos(angle(A))
+			 */
 			int get_distance_between_led_and_center(float center_progress, int center_angle, int led_angle)
 			{
 				int AB = center_progress * 2;
@@ -626,32 +626,32 @@ namespace Effects
 
 	namespace Effects
 	{
-		void set_led(int index, String color)
+		void set_led(int index, CRGB color)
 		{
 			enable();
 			animating = false;
 			animation_fn = NULL;
-			Leds::leds[index] = parse_color(color);
+			Leds::leds[index] = color;
 			FastLED.show();
 		}
 
-		void set_led_in_hex(int index, int hex_id, String color)
+		void set_led_in_hex(int index, int hex_id, CRGB color)
 		{
 			enable();
 			animating = false;
 			animation_fn = NULL;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(hex_id);
-			hex->set_at_index(index, parse_color(color));
+			hex->set_at_index(index, color);
 			FastLED.show();
 		}
 
-		void set_hex(int hex_id, String color)
+		void set_hex(int hex_id, CRGB color)
 		{
 			enable();
 			animating = false;
 			animation_fn = NULL;
 			HexNS::Hex *hex = HexNS::hexes->get_by_id(hex_id);
-			hex->set_color(parse_color(color));
+			hex->set_color(color);
 			FastLED.show();
 		}
 
@@ -671,15 +671,14 @@ namespace Effects
 			animation_fn = Animations::EdgeRainbow::loop;
 		}
 
-		void set_all(String str_color)
+		void set_all(CRGB str_color)
 		{
 			enable();
 			animating = false;
 			animation_fn = NULL;
-			CRGB color = parse_color(str_color);
 			for (int i = 0; i < HexNS::hexes->num_hexes; i++)
 			{
-				HexNS::hexes->get_by_index(i)->set_color(color);
+				HexNS::hexes->get_by_index(i)->set_color(str_color);
 			}
 			FastLED.show();
 		}
@@ -749,7 +748,8 @@ namespace Effects
 		}
 	}
 
-	bool is_enabled() {
+	bool is_enabled()
+	{
 		return enabled;
 	}
 

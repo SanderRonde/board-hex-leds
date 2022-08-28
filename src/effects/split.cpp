@@ -5,7 +5,7 @@
 
 namespace Split
 {
-	split_color_t set_new_color_target(split_color_t prev_split, int interval_min, int interval_max, HexNS::Hex *hex, bool use_split, bool is_first)
+	split_color_t set_new_color_target(split_color_t prev_split, int interval_min, int interval_max, Hex *hex, bool use_split, bool is_first)
 	{
 		split_color_t split_color;
 		split_color.uses_split = use_split;

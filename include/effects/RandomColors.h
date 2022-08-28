@@ -14,5 +14,5 @@ private:
 
 public:
 	RandomColors(RequestObj *request);
-	bool loop() override;
+	bool loop(Hexes *hexes) override;
 };

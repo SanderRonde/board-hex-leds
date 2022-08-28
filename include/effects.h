@@ -32,5 +32,7 @@ namespace Effects
 
 	bool is_enabled();
 
+	void setup(Hexes* hexes);
+
 	void loop();
 }

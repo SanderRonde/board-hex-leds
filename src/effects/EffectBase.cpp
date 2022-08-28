@@ -3,7 +3,7 @@
 #include "telnet.h"
 #include "hex.h"
 
-bool EffectBase::loop()
+bool EffectBase::loop(Hexes *hexes)
 {
 	FastLED.showColor(CRGB::Black);
 	return true;

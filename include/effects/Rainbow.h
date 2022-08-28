@@ -16,5 +16,5 @@ private:
 
 public:
 	Rainbow(RequestObj *request);
-	bool loop() override;
+	bool loop(Hexes *hexes) override;
 };

@@ -20,6 +20,7 @@ namespace Effects
 
 	bool animating = false;
 	EffectBase *effect = NULL;
+	Hexes *hexes;
 
 	void set_effect(EffectBase *new_effect)
 	{
@@ -28,11 +29,16 @@ namespace Effects
 			free(effect);
 		}
 		effect = new_effect;
+		if (new_effect != NULL) {
+			animating = true;
+		} else {
+			animating = false;
+		}
+		enable();
 	}
 
 	void stop_animation()
 	{
-		animating = false;
 		set_effect(NULL);
 	}
 
@@ -41,18 +47,16 @@ namespace Effects
 		void set_led(RequestObj *request)
 		{
 			enable();
-			animating = false;
-			set_effect(NULL);
-			Leds::leds[request->intv("index")] = request->colorv("color");
+			stop_animation();
+			hexes->set_led_at_index(request->intv("index"), request->colorv("color"));
 			FastLED.show();
 		}
 
 		void set_led_in_hex(RequestObj *request)
 		{
 			enable();
-			animating = false;
-			set_effect(NULL);
-			HexNS::Hex *hex = HexNS::hexes->get_by_id(request->intv("hex_id"));
+			stop_animation();
+			Hex *hex = hexes->get_by_id(request->intv("hex_id"));
 			hex->set_at_index(request->intv("index"), request->colorv("color"));
 			FastLED.show();
 		}
@@ -60,9 +64,8 @@ namespace Effects
 		void set_hex(RequestObj *request)
 		{
 			enable();
-			animating = false;
-			set_effect(NULL);
-			HexNS::Hex *hex = HexNS::hexes->get_by_id(request->intv("hex_id"));
+			stop_animation();
+			Hex *hex = hexes->get_by_id(request->intv("hex_id"));
 			hex->set_color(request->colorv("color"));
 			FastLED.show();
 		}
@@ -70,49 +73,38 @@ namespace Effects
 		void set_all(RequestObj *request)
 		{
 			enable();
-			animating = false;
-			set_effect(NULL);
+			stop_animation();
 			CRGB color = request->colorv("color");
-			for (int i = 0; i < HexNS::hexes->num_hexes; i++)
+			for (int i = 0; i < hexes->num_hexes; i++)
 			{
-				HexNS::hexes->get_by_index(i)->set_color(color);
+				hexes->get_by_index(i)->set_color(color);
 			}
 			FastLED.show();
 		}
 
 		void enable_rainbow(RequestObj *request)
 		{
-			enable();
 			set_effect(new Rainbow(request));
-			animating = true;
 		}
 
 		void enable_edge_rainbow(RequestObj *request)
 		{
-			enable();
 			set_effect(new EdgeRainbow(request));
-			animating = true;
 		}
 
 		void move_around()
 		{
-			enable();
-			set_effect(new MoveAround());
-			animating = true;
+			set_effect(new MoveAround(hexes));
 		}
 
 		void random_colors_gradual(RequestObj *request)
 		{
-			enable();
-			set_effect(new RandomColorsGradual(request));
-			animating = true;
+			set_effect(new RandomColorsGradual(hexes, request));
 		}
 
 		void random_colors(RequestObj *request)
 		{
-			enable();
 			set_effect(new RandomColors(request));
-			animating = true;
 		}
 	}
 
@@ -161,11 +153,16 @@ namespace Effects
 		return enabled;
 	}
 
+	void setup(Hexes *hexes_)
+	{
+		hexes = hexes_;
+	}
+
 	void loop()
 	{
 		if (animating && enabled && effect)
 		{
-			effect->loop();
+			effect->loop(hexes);
 
 			if (enabling || disabling)
 			{

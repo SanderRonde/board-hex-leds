@@ -36,7 +36,7 @@ void shift_array(T *arr, int arr_len, int shift_amount)
 	}
 }
 
-HexNS::Hex::Hex(hex_describer_t described_hex)
+Hex::Hex(hex_describer_t described_hex)
 {
 	id = described_hex.id;
 
@@ -58,27 +58,27 @@ HexNS::Hex::Hex(hex_describer_t described_hex)
 	}
 	memcpy(_sides, described_hex.borders, sizeof(int) * HEX_SIDES);
 }
-HexNS::Hex::~Hex()
+Hex::~Hex()
 {
 	free(_led_indices);
 }
 
-int HexNS::Hex::operator[](int index)
+int Hex::operator[](int index)
 {
 	return get_at_index(index);
 };
 
-int HexNS::Hex::get_at_index(int index)
+int Hex::get_at_index(int index)
 {
 	return _led_indices[index];
 };
 
-void HexNS::Hex::set_at_index(int index, CRGB color)
+void Hex::set_at_index(int index, CRGB color)
 {
 	Leds::leds[get_at_index(index)] = color;
 };
 
-void HexNS::Hex::set_color(CRGB color)
+void Hex::set_color(CRGB color)
 {
 	for (int i = 0; i < num_leds; i++)
 	{
@@ -86,33 +86,34 @@ void HexNS::Hex::set_color(CRGB color)
 	}
 };
 
-HexNS::Hex *HexNS::Hex::get_neighbour(HexNS::hex_side_t side)
+Hex *Hex::get_neighbour(hex_side_t side)
 {
 	int side_id = _sides[side];
-	if (side_id == -1) {
+	if (side_id == -1)
+	{
 		return NULL;
 	}
-	return ((HexNS::Hexes *)parent)->get_by_id(side_id);
+	return ((Hexes *)parent)->get_by_id(side_id);
 }
 
-HexNS::Hex *HexNS::Hex::get_neighbour_at_led(int led_index)
+Hex *Hex::get_neighbour_at_led(int led_index)
 {
-	int side_index_unfixed = (int) floor((Util::divide(led_index, num_leds) * HEX_SIDES) - 0.5);
+	int side_index_unfixed = (int)floor((Util::divide(led_index, num_leds) * HEX_SIDES) - 0.5);
 	int side_index = (HEX_SIDES + side_index_unfixed) % HEX_SIDES;
 
-	return get_neighbour((HexNS::hex_side_t)side_index);
+	return get_neighbour((hex_side_t)side_index);
 }
 
 /**
  * Calculate the step size in order to reach a full
  * revolution in given `revolution_time`
  */
-float HexNS::Hex::get_step_size_for_revolution(long revolution_time)
+float Hex::get_step_size_for_revolution(long revolution_time)
 {
 	return revolution_time / num_leds;
 }
 
-int HexNS::Hex::get_angle_at_index(int index)
+int Hex::get_angle_at_index(int index)
 {
 	int angle_per_led = Util::divide(FULL_ROTATION_ANGLE, num_leds);
 	return ((index * angle_per_led) + (ANGLE_PER_SIDE / 2)) % FULL_ROTATION_ANGLE;

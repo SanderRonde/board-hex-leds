@@ -14,7 +14,7 @@ Rainbow::Rainbow(RequestObj *request) : EffectBase()
 	_offset = 0;
 }
 
-bool Rainbow::loop()
+bool Rainbow::loop(Hexes *hexes)
 {
 	long long time_diff = millis() - _last_iteration;
 	double added_offset = (double)time_diff * _revolve_step;
@@ -23,9 +23,9 @@ bool Rainbow::loop()
 
 	int rounded_offset = (int)round(_offset);
 
-	for (int i = 0; i < HexNS::hexes->num_hexes; i++)
+	for (int i = 0; i < hexes->num_hexes; i++)
 	{
-		HexNS::Hex *hex = HexNS::hexes->get_by_index(i);
+		Hex *hex = hexes->get_by_index(i);
 		int hex_led_step = (int)Util::divide(MAX_CSHV_VALUE_MOD, hex->num_leds);
 
 		int total_step = rounded_offset;

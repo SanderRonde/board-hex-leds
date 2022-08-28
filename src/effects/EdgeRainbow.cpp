@@ -9,7 +9,7 @@ EdgeRainbow::EdgeRainbow(RequestObj *request) : EffectBase()
 	_offset = 0;
 }
 
-bool EdgeRainbow::loop()
+bool EdgeRainbow::loop(Hexes *hexes)
 {
 	long long time_diff = millis() - _last_iteration;
 	double added_offset = (double)time_diff * _revolve_step;
@@ -21,7 +21,7 @@ bool EdgeRainbow::loop()
 	int total_offset = rounded_offset;
 	for (int i = 0; i < NUM_LEDS; i++)
 	{
-		Leds::leds[i] = CHSV(total_offset, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
+		hexes->set_led_at_index(i, CHSV(total_offset, MAX_CSHV_VALUE, MAX_CSHV_VALUE));
 
 		total_offset = (total_offset + RAINBOW_STEP) % MAX_CSHV_VALUE_MOD;
 	}

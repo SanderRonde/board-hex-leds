@@ -14,7 +14,6 @@ namespace Leds
 	}
 
 	int offset = 0;
-	int big_offset = 0;
 	void loop()
 	{
 		offset++;

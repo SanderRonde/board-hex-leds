@@ -7,7 +7,7 @@
 
 typedef struct split_color
 {
-	HexNS::Hex *hex;
+	Hex *hex;
 	change_t first_half_color;
 	change_t second_half_color;
 	int split_led_idx;
@@ -16,7 +16,7 @@ typedef struct split_color
 
 namespace Split
 {
-	split_color_t set_new_color_target(split_color_t prev_split, int interval_min, int interval_max, HexNS::Hex *hex, bool use_split, bool is_first = false);
+	split_color_t set_new_color_target(split_color_t prev_split, int interval_min, int interval_max, Hex *hex, bool use_split, bool is_first = false);
 	void bump_progress(split_color_t *split_color, int progress_amount);
 	split_color_t change_on_total_reached(split_color_t split_color, int interval_min, int interval_max);
 	bool is_pixel_in_half(int led_idx, int half_start, int total_leds);

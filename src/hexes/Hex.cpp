@@ -1,7 +1,7 @@
 #include <hex.h>
-#include <leds.h>
 #include <util.h>
-#include <telnet.h>
+#include <FastLED.h>
+#include "leds.h"
 
 template <class T>
 void reverse_arr(T *arr, int arr_len)
@@ -117,4 +117,23 @@ int Hex::get_angle_at_index(int index)
 {
 	int angle_per_led = Util::divide(FULL_ROTATION_ANGLE, num_leds);
 	return ((index * angle_per_led) + (ANGLE_PER_SIDE / 2)) % FULL_ROTATION_ANGLE;
+}
+
+int Hex::get_angle_aligned_with_x_for_index(int index)
+{
+	int angle = get_angle_at_index(index);
+	return (angle + (FULL_ROTATION_ANGLE / 4)) % FULL_ROTATION_ANGLE;
+}
+
+float Hex::get_relative_pos_for_index(int index, bool is_x)
+{
+	int angle = get_angle_aligned_with_x_for_index(index);
+	if (is_x)
+	{
+		return ((cos(radians(angle))) + 1) / 2;
+	}
+	else
+	{
+		return ((sin(radians(angle))) + 1) / 2;
+	}
 }

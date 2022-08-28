@@ -5,13 +5,6 @@
 
 #define SERVER_PORT 80
 
-class MissingArgException : public std::exception
-{
-public:
-	const char *arg_name;
-	MissingArgException(const char *arg_name_) : arg_name(arg_name_) {}
-};
-
 CRGB RequestObj::_parse_color(String color)
 {
 	CRGB color_obj;
@@ -33,6 +26,16 @@ CRGB RequestObj::_parse_color(String color)
 
 RequestObj::RequestObj(ESP8266WebServer *server) : _server(server) {}
 
+void RequestObj::_err(const char *arg_name)
+{
+	Serial.printf("Missing: %s\n", arg_name);
+	std::string err = "Argument ";
+	err += arg_name;
+	err += " is missing";
+	LOGF("%s\n", err.c_str());
+	_server->send(400, "text/plain", err.c_str());
+}
+
 int RequestObj::intv(const char *arg_name, int default_val)
 {
 	if (!_server->hasArg(String(arg_name)))
@@ -41,17 +44,35 @@ int RequestObj::intv(const char *arg_name, int default_val)
 		{
 			return default_val;
 		}
-		throw MissingArgException(arg_name);
+		_err(arg_name);
+		return 1;
 	}
 
 	return atoi(_server->arg(arg_name).c_str());
+}
+
+String RequestObj::stringv(const char *arg_name)
+{
+	if (!_server->hasArg(String(arg_name)))
+	{
+		_err(arg_name);
+		return "";
+	}
+
+	return _server->arg(arg_name);
+}
+
+bool RequestObj::has(const char *arg_name)
+{
+	return _server->hasArg(String(arg_name));
 }
 
 bool RequestObj::boolv(const char *arg_name)
 {
 	if (!_server->hasArg(String(arg_name)))
 	{
-		throw MissingArgException(arg_name);
+		_err(arg_name);
+		return false;
 	}
 
 	return _server->arg(arg_name) == "true";
@@ -65,7 +86,8 @@ CRGB RequestObj::colorv(const char *arg_name, const char *default_val)
 		{
 			return _parse_color(default_val);
 		}
-		throw MissingArgException(arg_name);
+		_err(arg_name);
+		return CRGB::Black;
 	}
 
 	return _parse_color(_server->arg(arg_name).c_str());
@@ -135,23 +157,12 @@ protected:
 	{
 		return [=]() -> void
 		{
-			try
+			LOGF("Got request for URI: %s with %d args\n", self->server->uri().c_str(), self->server->args());
+			for (int i = 0; i < self->server->args(); i++)
 			{
-				LOGF("Got request for URI: %s with %d args\n", self->server->uri().c_str(), self->server->args());
-				for (int i = 0; i < self->server->args(); i++)
-				{
-					LOGF("\t[%s]: %s\n", self->server->argName(i).c_str(), self->server->arg(i).c_str());
-				}
-				handler(self->request, self->response);
+				LOGF("\t[%s]: %s\n", self->server->argName(i).c_str(), self->server->arg(i).c_str());
 			}
-			catch (MissingArgException missing_arg_e)
-			{
-				std::string err = "Argument ";
-				err += missing_arg_e.arg_name;
-				err += " is missing";
-				LOGF("%s\n", err.c_str());
-				self->response->err(err);
-			}
+			handler(self->request, self->response);
 		};
 	}
 
@@ -252,6 +263,12 @@ private:
 		return response->success();
 	}
 
+	static int _route_fade(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::fade(request);
+		return response->success();
+	}
+
 	static int _route_not_found(RequestObj *request, ResponseObj *response)
 	{
 		return response->not_found();
@@ -284,6 +301,7 @@ public:
 		_server->on("/effects/move", HTTP_POST, _route(_container, _route_set_move));
 		_server->on("/effects/random_colors_gradual", HTTP_POST, _route(_container, _route_set_random_colors_gradual));
 		_server->on("/effects/random_colors", HTTP_POST, _route(_container, _route_set_random_colors));
+		_server->on("/effects/fade", HTTP_POST, _route(_container, _route_fade));
 		_server->onNotFound(_route(_container, _route_not_found));
 	}
 };

@@ -1,9 +1,6 @@
 #include <hex.h>
 #include <stdlib.h>
 #include <string.h>
-#include <telnet.h>
-#include <net.h>
-#include <leds.h>
 
 const hex_describer_t described_hexes[] = {
 		{.id = 1,

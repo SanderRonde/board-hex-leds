@@ -1,9 +1,7 @@
 #pragma once
 
-#ifndef HEXES_H
-#define HEXES_H
-
 #include <FastLED.h>
+#include <map>
 
 #define HEX_SIDES 6
 #define HEXES_UPPERBOUND 20
@@ -30,6 +28,21 @@ typedef enum HEX_SIDE
 	HEX_SIDE_TOP_LEFT = 5,
 } hex_side_t;
 
+class HexPositions
+{
+public:
+	// A map from hex index to their X position (LTR)
+	std::map<int, int> hex_positions_x;
+	// A map from hex index to their Y position (BTT)
+	std::map<int, int> hex_positions_y;
+	// A map from hex index to their X position (LTR)
+	std::map<int, float> hex_positions_x_relative;
+	// A map from hex index to their Y position (BTT)
+	std::map<int, float> hex_positions_y_relative;
+
+	HexPositions(void *hexes);
+};
+
 class Hex
 {
 public:
@@ -46,6 +59,8 @@ public:
 	void set_at_index(int index, CRGB color);
 	void set_color(CRGB color);
 	int get_angle_at_index(int index);
+	int get_angle_aligned_with_x_for_index(int index);
+	float get_relative_pos_for_index(int index, bool is_y);
 
 	Hex *get_neighbour(hex_side_t side);
 	Hex *get_neighbour_at_led(int led_index);
@@ -69,6 +84,10 @@ public:
 	Hex *get_by_id(int id);
 	Hex *get_by_index(int index);
 	void set_led_at_index(int index, CRGB color);
+	int get_x_max_pos();
+	int get_y_max_pos();
+	int get_x_pos_for_index(int index);
+	int get_y_pos_for_index(int index);
 	Hexes *hexes = NULL;
 	int num_hexes;
 
@@ -76,11 +95,10 @@ public:
 
 private:
 	Hex **_hexes;
+	HexPositions *_positions;
 };
 
 namespace HexNS
 {
 	Hexes *setup();
 };
-
-#endif

@@ -76,10 +76,12 @@ namespace Util
 		return cur;
 	}
 
-	long random_except_range(long min, long max, long except_start, long except_end) {
+	long random_except_range(long min, long max, long except_start, long except_end)
+	{
 		long except_size = except_end - except_start;
 		long random_num = random(min, max - except_size);
-		if (random_num >= except_start) {
+		if (random_num >= except_start)
+		{
 			return random_num + except_size;
 		}
 		return random_num;

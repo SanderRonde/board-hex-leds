@@ -11,6 +11,7 @@
 #include "effects/MoveAround.h"
 #include "effects/RandomColors.h"
 #include "effects/RandomColorsGradual.h"
+#include "effects/Fade.h"
 #include "effects/change.h"
 #include "api.h"
 
@@ -29,9 +30,12 @@ namespace Effects
 			free(effect);
 		}
 		effect = new_effect;
-		if (new_effect != NULL) {
+		if (new_effect != NULL)
+		{
 			animating = true;
-		} else {
+		}
+		else
+		{
 			animating = false;
 		}
 		enable();
@@ -105,6 +109,11 @@ namespace Effects
 		void random_colors(RequestObj *request)
 		{
 			set_effect(new RandomColors(request));
+		}
+
+		void fade(RequestObj *request)
+		{
+			set_effect(new Fade(hexes, request));
 		}
 	}
 

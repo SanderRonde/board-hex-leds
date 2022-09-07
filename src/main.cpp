@@ -38,7 +38,7 @@ void setup()
 void loop()
 {
 	OTA::loop();
-	Telnet::loop();
+	// Telnet::loop();
 	API::loop();
 
 	Effects::loop();

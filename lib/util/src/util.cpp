@@ -76,6 +76,17 @@ namespace Util
 		return cur;
 	}
 
+	// Blend one CHSV color toward another CHSV color by a given amount.
+	// Blending is linear, and done in the HSV color space.
+	// This function modifies 'cur' in place.
+	CHSV fade_towards_color(CHSV cur, const CHSV target, uint8_t amount)
+	{
+		cur.hue = n_blend_u8_towards_u8(cur.hue, target.hue, amount);
+		cur.sat = n_blend_u8_towards_u8(cur.sat, target.sat, amount);
+		cur.val = n_blend_u8_towards_u8(cur.val, target.val, amount);
+		return cur;
+	}
+
 	long random_except_range(long min, long max, long except_start, long except_end)
 	{
 		long except_size = except_end - except_start;

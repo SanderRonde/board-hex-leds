@@ -29,7 +29,6 @@ std::map<int, float> Fade::calculate_pos_map(Hexes *hexes)
 
 	bool is_x = _direction == FADE_RIGHT || _direction == FADE_LEFT;
 	int max_pos = (is_x ? hexes->get_x_max_pos() : hexes->get_y_max_pos()) + 1;
-	Serial.printf("MAx pos=%d\n", max_pos);
 	for (int i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);

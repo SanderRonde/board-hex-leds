@@ -2,6 +2,7 @@
 #include <effects.h>
 #include <telnet.h>
 #include <FastLED.h>
+#include <string>
 
 #define SERVER_PORT 80
 

@@ -1,5 +1,4 @@
-#include <ArduinoOTA.h>
-#include <Arduino.h>
+#include <Arduino.a.h>
 #include <effects.h>
 #include <config.h>
 #include <api.h>

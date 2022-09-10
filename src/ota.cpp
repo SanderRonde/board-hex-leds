@@ -1,3 +1,4 @@
+#ifndef MOCK
 #include <ArduinoOTA.h>
 #include <ota_secrets.h>
 
@@ -54,3 +55,21 @@ namespace OTA {
 		ArduinoOTA.handle();
 	}
 }
+
+#else
+
+namespace OTA {
+	void setup() {
+
+	}
+
+	void wait_for_otas() {
+		
+	}
+
+	void loop() {
+
+	}
+}
+
+#endif

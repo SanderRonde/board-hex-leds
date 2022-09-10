@@ -1,6 +1,6 @@
 #pragma once
 
-#include <FastLED.h>
+#include <FastLED.a.h>
 #include <map>
 
 #define HEX_SIDES 6

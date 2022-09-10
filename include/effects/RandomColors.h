@@ -10,7 +10,7 @@ class RandomColors : public EffectBase
 {
 private:
 	int _wait_time = 0;
-	long long _last_iteration;
+	unsigned long _last_iteration;
 
 public:
 	RandomColors(RequestObj *request);

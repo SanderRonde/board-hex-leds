@@ -16,7 +16,7 @@ bool EdgeRainbow::loop(Hexes *hexes)
 	_offset = std::fmod(_offset + added_offset, MAX_CSHV_VALUE_MOD);
 	_last_iteration = millis();
 
-	int rounded_offset = (int)round(_offset);
+	int rounded_offset = (int)floor(_offset);
 
 	int total_offset = rounded_offset;
 	for (int i = 0; i < NUM_LEDS; i++)

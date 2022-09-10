@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Arduino.h>
+#include <Arduino.a.h>
 #include <string.h>
-#include <FastLED.h>
+#include <FastLED.a.h>
 
 namespace Util
 {

@@ -21,7 +21,7 @@ bool Rainbow::loop(Hexes *hexes)
 	_offset = std::fmod(_offset + added_offset, MAX_CSHV_VALUE_MOD);
 	_last_iteration = millis();
 
-	int rounded_offset = (int)round(_offset);
+	int rounded_offset = (int)floor(_offset);
 
 	for (int i = 0; i < hexes->num_hexes; i++)
 	{

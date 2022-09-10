@@ -1,16 +1,17 @@
 #pragma once
 
-#include <WiFiClient.h>
+#include "WiFiClient.a.h"
 
 #define LOG Telnet::client.print
 #define LOGN Telnet::client.println
 #define LOGLN LOGN
 #define LOGF Telnet::client.printf
 
-namespace Telnet {
+namespace Telnet
+{
 	extern WiFiClient client;
 
-	void setup(const char* name);
+	void setup(const char *name);
 
 	void loop();
 }

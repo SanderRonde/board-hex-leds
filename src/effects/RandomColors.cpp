@@ -9,7 +9,7 @@ RandomColors::RandomColors(RequestObj *request) : EffectBase()
 
 bool RandomColors::loop(Hexes *hexes)
 {
-	if (millis() - _last_iteration <= _wait_time)
+	if ((int)(millis() - _last_iteration) <= _wait_time)
 	{
 		return false;
 	}

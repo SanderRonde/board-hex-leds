@@ -1,5 +1,5 @@
-#include <WiFiClient.h>
-#include <Arduino.h>
+#include "WiFiClient.a.h"
+#include "Arduino.a.h"
 #include <string.h>
 #include <telnet.h>
 #include <net.h>
@@ -9,20 +9,25 @@
 
 #define RETRY_TIME 30
 
-namespace Telnet {
+namespace Telnet
+{
 	WiFiClient client;
 
-	char* _name = (char*) malloc(sizeof(char) * 50);
-	void connect() {
+	char *_name = (char *)malloc(sizeof(char) * 50);
+	void connect()
+	{
 		client.connect(TELNET_IP, TELNET_PORT);
 		client.write("set-name:");
 		client.write(_name);
 		client.write("\n");
 		client.write("Hi\n");
+		#ifndef MOCK
 		client.write(("Reset reason: " + ESP.getResetReason() + "\n").c_str());
+		#endif
 	}
 
-	void setup(const char* name) {
+	void setup(const char *name)
+	{
 		strcpy(_name, name);
 
 		Net::setup();
@@ -32,10 +37,13 @@ namespace Telnet {
 	}
 
 	unsigned long last_connect = millis();
-	void loop() {
-		if (millis() - last_connect > RETRY_TIME * 1000) {
+	void loop()
+	{
+		if (millis() - last_connect > RETRY_TIME * 1000)
+		{
 			client.keepAlive();
-			if (!client.connected()) {
+			if (!client.connected())
+			{
 				connect();
 			}
 		}

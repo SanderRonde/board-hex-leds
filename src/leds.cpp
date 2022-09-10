@@ -1,5 +1,5 @@
 #include <leds.h>
-#include <FastLED.h>
+#include <FastLED.a.h>
 
 CRGB colors[] = {CRGB::Red, CRGB::Orange, CRGB::Yellow, CRGB::Green, CRGB::Blue, CRGB::Purple};
 const int NUM_COLORS = sizeof(colors) / sizeof(CRGB);
@@ -10,7 +10,11 @@ namespace Leds
 
 	void setup()
 	{
+#ifdef MOCK
+		FastLED.addLeds(leds, NUM_LEDS, 0);
+#else
 		FastLED.addLeds<WS2812B, LED_PIN, GRB>(leds, NUM_LEDS, 0);
+#endif
 	}
 
 	int offset = 0;

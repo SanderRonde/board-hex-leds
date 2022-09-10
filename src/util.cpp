@@ -1,6 +1,6 @@
-#include <Arduino.h>
+#include "Arduino.a.h"
 #include <string.h>
-#include <FastLED.h>
+#include "FastLED.a.h"
 
 namespace Util
 {
@@ -85,6 +85,11 @@ namespace Util
 		cur.sat = n_blend_u8_towards_u8(cur.sat, target.sat, amount);
 		cur.val = n_blend_u8_towards_u8(cur.val, target.val, amount);
 		return cur;
+	}
+
+	long random(long min, long max)
+	{
+		return rand() % (max - min + 1) + min;
 	}
 
 	long random_except_range(long min, long max, long except_start, long except_end)

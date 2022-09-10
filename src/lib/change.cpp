@@ -40,7 +40,6 @@ namespace Change
 	{
 		if (change.locked)
 		{
-			Serial.printf("Locked\n");
 			return change.color;
 		}
 		CHSV current = CHSV(change.current, MAX_CSHV_VALUE, MAX_CSHV_VALUE);

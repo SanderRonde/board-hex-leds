@@ -7,3 +7,4 @@ secrets.h
 .vscode
 
 **/node_modules
+build

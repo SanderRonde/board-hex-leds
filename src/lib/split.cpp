@@ -3,6 +3,8 @@
 #include "util.h"
 #include "effects/split.h"
 
+using namespace std;
+
 namespace Split
 {
 	split_color_t set_new_color_target(split_color_t prev_split, int interval_min, int interval_max, Hex *hex, bool use_split, bool is_first)

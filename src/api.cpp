@@ -1,10 +1,10 @@
-#include "net.h"
-#include <effects.h>
-#include <telnet.h>
-#include <FastLED.h>
-#include <string>
-
 #define SERVER_PORT 80
+#include <telnet.h>
+
+#include <net.h>
+#include <effects.h>
+#include <FastLED.a.h>
+#include <string>
 
 CRGB RequestObj::_parse_color(String color)
 {
@@ -29,10 +29,10 @@ RequestObj::RequestObj(ESP8266WebServer *server) : _server(server) {}
 
 void RequestObj::_err(const char *arg_name)
 {
-	Serial.printf("Missing: %s\n", arg_name);
 	std::string err = "Argument ";
 	err += arg_name;
 	err += " is missing";
+	Serial.println(err.c_str());
 	LOGF("%s\n", err.c_str());
 	_server->send(400, "text/plain", err.c_str());
 }
@@ -154,6 +154,7 @@ protected:
 	RequestObj *_request;
 	ResponseObj *_response;
 	ESP8266WebServer *_server;
+#ifndef MOCK
 	static std::function<void()> _route(RequestDataContainer *self, int (*handler)(RequestObj *, ResponseObj *))
 	{
 		return [=]() -> void
@@ -166,6 +167,7 @@ protected:
 			handler(self->request, self->response);
 		};
 	}
+#endif
 
 public:
 	APIRequestHandler(ESP8266WebServer *server) : _server(server)
@@ -288,6 +290,7 @@ public:
 
 	void listen()
 	{
+#ifndef MOCK
 		_server->begin(SERVER_PORT);
 		_server->on("/", HTTP_GET, _route(_container, _route_root));
 		_server->on("/is_on", HTTP_POST, _route(_container, _route_is_on));
@@ -304,6 +307,7 @@ public:
 		_server->on("/effects/random_colors", HTTP_POST, _route(_container, _route_set_random_colors));
 		_server->on("/effects/fade", HTTP_POST, _route(_container, _route_fade));
 		_server->onNotFound(_route(_container, _route_not_found));
+#endif
 	}
 };
 

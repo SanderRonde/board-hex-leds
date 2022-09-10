@@ -1,7 +1,7 @@
 #include <hex.h>
 #include <leds.h>
 #include <string.h>
-#include <FastLED.h>
+#include <FastLED.a.h>
 #include <util.h>
 #include <telnet.h>
 #include "constants.h"

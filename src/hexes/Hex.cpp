@@ -1,6 +1,6 @@
 #include <hex.h>
 #include <util.h>
-#include <FastLED.h>
+#include <FastLED.a.h>
 #include "leds.h"
 
 template <class T>
@@ -53,7 +53,7 @@ Hex::Hex(hex_describer_t described_hex)
 	}
 	if (described_hex.offset_percentage)
 	{
-		int offset_flat_amount = round(num_leds * (double)described_hex.offset_percentage / 100);
+		int offset_flat_amount = floor(num_leds * (double)described_hex.offset_percentage / 100);
 		shift_array<int>(_led_indices, num_leds, offset_flat_amount);
 	}
 	memcpy(_sides, described_hex.borders, sizeof(int) * HEX_SIDES);

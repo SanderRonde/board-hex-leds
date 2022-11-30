@@ -1,10 +1,7 @@
 import React from "react";
 import "./App.css";
-import { DEFAULT_HEXES, HexCreator, HexType } from "./components/HexCreator";
-import { UnControlled as CodeMirror } from "react-codemirror2";
-import "codemirror/lib/codemirror.css";
-import "codemirror/theme/material.css";
-import "codemirror/mode/javascript/javascript.js";
+import { HexCreator, HexType } from "./components/HexCreator";
+import { DEFAULT_HEXES } from "./config";
 
 function App() {
     const prettyify = (data: string) => {
@@ -50,18 +47,11 @@ function App() {
             <div
                 style={{
                     border: "1px solid red",
-                    height: '200px!important',
-                    overflow: 'hidden'
+                    height: "200px!important",
+                    overflow: "hidden",
                 }}
             >
-                <CodeMirror
-                    options={{
-                        readOnly: true,
-                        mode: "javascript",
-                        lineWrapping: true,
-                    }}
-                    value={hexJSON}
-                />
+                <textarea rows={20} cols={50} readOnly value={hexJSON} />
             </div>
         </div>
     );

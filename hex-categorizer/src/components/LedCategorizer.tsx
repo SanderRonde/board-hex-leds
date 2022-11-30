@@ -1,5 +1,6 @@
 import { HexCls, HexGetter } from "./HexCreator";
 import * as React from "react";
+import { HEX_IP } from "../config";
 
 export function LedCategorizer(props: {
     hexGetters: HexGetter[];
@@ -12,25 +13,20 @@ export function LedCategorizer(props: {
         props.isOrderer ? 0 : Number.isFinite(highestLed) ? highestLed + 1 : 0
     );
 
-    const [
-        currentHexGetter,
-        setCurrentHexGetter,
-    ] = React.useState<HexGetter | null>(null);
+    const [currentHexGetter, setCurrentHexGetter] =
+        React.useState<HexGetter | null>(null);
     const [currentList, setCurrentList] = React.useState<number[]>([]);
 
     const turnOffLed = async (ledNumber: number) => {
-        await fetch(
-            `http://192.168.1.85:80/set_led?num=${ledNumber}&power=off`,
-            {
-                mode: "no-cors",
-                method: "POST",
-            }
-        );
+        await fetch(`http://${HEX_IP}:80/set_led?index=${ledNumber}&power=off`, {
+            mode: "no-cors",
+            method: "POST",
+        });
     };
 
     const turnOnLed = async (ledNumber: number) => {
         await fetch(
-            `http://192.168.1.85:80/set_led?num=${ledNumber}&color=%23FF00FF`,
+            `http://${HEX_IP}:80/set_led?index=${ledNumber}&color=%23FF00FF`,
             {
                 mode: "no-cors",
                 method: "POST",

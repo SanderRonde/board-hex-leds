@@ -1,65 +1,20 @@
 import React from "react";
+import { DEFAULT_HEXES } from "../config";
 import { Hex } from "./Hex";
 import { LedCategorizer } from "./LedCategorizer";
 
 export interface HexType {
     id: number;
-    borders: [number, number, number, number, number, number];
+    borders: [
+        top: number,
+        topRight: number,
+        botRight: number,
+        bot: number,
+        botLeft: number,
+        topLeft: number
+    ];
     leds: number[];
 }
-
-export const DEFAULT_HEXES: HexType[] = [
-    {
-        id: 1,
-        borders: [-1, 3, 4, 2, -1, -1],
-        leds: [],
-    },
-    {
-        id: 2,
-        borders: [1, 4, -1, -1, -1, -1],
-        leds: [],
-    },
-    {
-        id: 3,
-        borders: [-1, -1, 5, 4, 2, -1],
-        leds: [],
-    },
-    {
-        id: 4,
-        borders: [3, 5, 6, -1, 2, 1],
-        leds: [],
-    },
-    {
-        id: 5,
-        borders: [-1, 7, 8, 6, 4, 3],
-        leds: [],
-    },
-    {
-        id: 6,
-        borders: [5, 8, -1, -1, -1, 4],
-        leds: [],
-    },
-    {
-        id: 7,
-        borders: [-1, 9, 10, 8, 5, -1],
-        leds: [],
-    },
-    {
-        id: 8,
-        borders: [7, 10, -1, -1, 6, 5],
-        leds: [],
-    },
-    {
-        id: 9,
-        borders: [-1, -1, -1, 10, 7, -1],
-        leds: [],
-    },
-    {
-        id: 10,
-        borders: [9, -1, -1, -1, 8, 7],
-        leds: [],
-    },
-];
 
 export class HexGetter {
     constructor(public id: number) {}
@@ -156,23 +111,11 @@ export function HexCreator(props: {
         ).map((h) => new HexCls(h, props.updateStoredData))
     );
 
-    const rows: HexCls[][] = [[]];
-    for (const hex of hexes) {
-        if (hex.top === null) {
-            rows[0].push(hex);
-        }
+    const rows: HexCls[][] = [];
+    for (let i = 0; i < hexes.length; i++) {
+        rows[Math.floor(i / 6)] ??= [];
+        rows[Math.floor(i / 6)].push(hexes[i]);
     }
-
-    let lastIndex: number = 0;
-    do {
-        rows.push([]);
-        for (const lastRowItem of rows[lastIndex]) {
-            if (lastRowItem.bot) {
-                rows[lastIndex + 1].push(lastRowItem.bot);
-            }
-        }
-        lastIndex++;
-    } while (rows[lastIndex].length);
 
     return (
         <span>

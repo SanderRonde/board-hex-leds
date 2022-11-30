@@ -98,6 +98,11 @@ private:
 	HexPositions *_positions;
 };
 
+extern const hex_describer_t described_hexes_bed[];
+extern const hex_describer_t described_hexes_desk[];
+extern size_t num_hexes_bed;
+extern size_t num_hexes_desk;
+
 namespace HexNS
 {
 	Hexes *setup();

@@ -13,6 +13,8 @@ namespace Effects
 
 		void set_hex(RequestObj *request);
 
+		void set_rainbow_hex(RequestObj *request);
+
 		void enable_rainbow(RequestObj *request);
 
 		void enable_edge_rainbow(RequestObj *request);

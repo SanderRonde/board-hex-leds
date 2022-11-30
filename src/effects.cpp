@@ -74,6 +74,23 @@ namespace Effects
 			FastLED.show();
 		}
 
+		void set_rainbow_hex(RequestObj *request)
+		{
+			// For debugging
+			enable();
+			stop_animation();
+			for (int i = 0; i < hexes->num_hexes; i++)
+			{
+				hexes->get_by_index(i)->set_color(CRGB::Black);
+			}
+			Hex *hex = hexes->get_by_id(request->intv("hex_id"));
+			for (int i = 0; i < hex->num_leds; i++) {
+				float percentage = (float)i / (float)hex->num_leds;
+				hex->set_at_index(i, CHSV(floor(percentage * 255.0f), 255, 255));
+			}
+			FastLED.show();
+		}
+
 		void set_all(RequestObj *request)
 		{
 			enable();

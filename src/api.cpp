@@ -228,6 +228,12 @@ private:
 		return response->success();
 	}
 
+	static int _route_rainbow_hex(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::set_rainbow_hex(request);
+		return response->success();
+	}
+
 	static int _route_set_all(RequestObj *request, ResponseObj *response)
 	{
 		Effects::Effects::set_all(request);
@@ -296,6 +302,7 @@ public:
 		_server->on("/set_led_in_hex", HTTP_POST, _route(_container, _route_set_led_in_hex));
 		_server->on("/set_led", HTTP_POST, _route(_container, _route_set_led));
 		_server->on("/set_hex", HTTP_POST, _route(_container, _route_set_hex));
+		_server->on("/set_rainbow_hex", HTTP_POST, _route(_container, _route_rainbow_hex));
 		_server->on("/set_all", HTTP_POST, _route(_container, _route_set_all));
 		_server->on("/effects/rainbow", HTTP_POST, _route(_container, _route_set_rainbow));
 		_server->on("/effects/edge_rainbow", HTTP_POST, _route(_container, _route_set_edge_rainbow));

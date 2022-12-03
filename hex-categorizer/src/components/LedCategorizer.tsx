@@ -1,4 +1,4 @@
-import { HexCls, HexGetter } from "./HexCreator";
+import { HexGetter } from "./HexCreator";
 import * as React from "react";
 import { HEX_IP } from "../config";
 
@@ -60,7 +60,11 @@ export function LedCategorizer(props: {
     );
 
     const nextLed = async () => {
-        const totalSet = currentHexGetter!.hex.leds;
+        if (!currentHexGetter) {
+            alert("No hex selected, click one above");
+            return;
+        }
+        const totalSet = currentHexGetter.hex.leds;
         const availableLeds = totalSet.filter((i) => !currentList.includes(i));
         const currentIdx = availableLeds.indexOf(ledIdx);
         let newIdx = (currentIdx + 1) % availableLeds.length;
@@ -74,7 +78,11 @@ export function LedCategorizer(props: {
     };
 
     const prevLed = async () => {
-        const totalSet = currentHexGetter!.hex.leds;
+        if (!currentHexGetter) {
+            alert("No hex selected, click one above");
+            return;
+        }
+        const totalSet = currentHexGetter.hex.leds;
         const availableLeds = totalSet.filter((i) => !currentList.includes(i));
         const currentIdx = availableLeds.indexOf(ledIdx);
         let newIdx =

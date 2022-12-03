@@ -18,10 +18,13 @@ export function LedCategorizer(props: {
     const [currentList, setCurrentList] = React.useState<number[]>([]);
 
     const turnOffLed = async (ledNumber: number) => {
-        await fetch(`http://${HEX_IP}:80/set_led?index=${ledNumber}&power=off`, {
-            mode: "no-cors",
-            method: "POST",
-        });
+        await fetch(
+            `http://${HEX_IP}:80/set_led?index=${ledNumber}&color=%23000000`,
+            {
+                mode: "no-cors",
+                method: "POST",
+            }
+        );
     };
 
     const turnOnLed = async (ledNumber: number) => {

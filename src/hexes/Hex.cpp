@@ -30,6 +30,9 @@ void shift_array_once(T *arr, int arr_len)
 template <class T>
 void shift_array(T *arr, int arr_len, int shift_amount)
 {
+	if (shift_amount < 0) {
+		shift_amount += arr_len;
+	}
 	for (int i = 0; i < shift_amount; i++)
 	{
 		shift_array_once<T>(arr, arr_len);
@@ -51,7 +54,7 @@ Hex::Hex(hex_describer_t described_hex)
 	{
 		reverse_arr<int>(_led_indices, num_leds);
 	}
-	if (described_hex.offset_percentage)
+	if (described_hex.offset_percentage != 0)
 	{
 		int offset_flat_amount = round(num_leds * (double)described_hex.offset_percentage / 100);
 		shift_array<int>(_led_indices, num_leds, offset_flat_amount);

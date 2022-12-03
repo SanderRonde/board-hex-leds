@@ -18,7 +18,7 @@ const C_LINE_TEMPLATE = (hexType: HexType) => {
         hexType.id
     }, .offset_percentage = 0, .invert_order = true, .borders = {${hexType.borders.join(
         ", "
-    )}}, .leds = {${hexType.leds.join(", ")}}}`;
+    )}}, .leds = {${[...hexType.leds, -1].join(", ")}}}`;
 };
 
 function App() {

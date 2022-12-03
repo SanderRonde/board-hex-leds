@@ -12,6 +12,9 @@
 typedef struct hex_describer
 {
 	int id;
+	/**
+	 * When this is a positive number, leds are moved clockwise
+	 */
 	int offset_percentage;
 	bool invert_order;
 	int borders[HEX_SIDES];

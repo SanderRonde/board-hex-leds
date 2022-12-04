@@ -32,6 +32,7 @@ void setup()
 
 	// Done
 	LOGN("Booted");
+	Serial.println("Booted");
 	FastLED.showColor(CRGB::Black);
 }
 

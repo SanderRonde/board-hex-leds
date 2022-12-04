@@ -1,6 +1,8 @@
 #pragma once
 
 #include <FastLED.h>
+#include "config.h"
+#include "leds.h"
 #include <map>
 
 #define HEX_SIDES 6
@@ -34,6 +36,9 @@ typedef struct hex_describer
 	int leds[35];
 } hex_describer_t;
 
+DECLARE_DESCRIBER(bed)
+DECLARE_DESCRIBER(desk)
+
 typedef enum HEX_SIDE
 {
 	HEX_SIDE_TOP = 0,
@@ -59,18 +64,13 @@ public:
 
 	HexPositions(void *hexes);
 	// A map from led index to their X position (LTR)
-	std::map<int, float> get_led_pos_map_x();
+	float led_pos_map_x[NUM_LEDS] = {0.0f};
 	// A map from led index to their Y position (BTT)
-	std::map<int, float> get_led_pos_map_y();
+	float led_pos_map_y[NUM_LEDS] = {0.0f};
 
 private:
 	void *_hexes;
-	bool _pos_maps_set = false;
-	void ensure_pos_maps();
-	// A map from led index to their X position (LTR)
-	std::map<int, float> _led_pos_map_x;
-	// A map from led index to their Y position (BTT)
-	std::map<int, float> _led_pos_map_y;
+	void calculate_pixel_pos_map(bool is_x);
 };
 
 class Hex
@@ -136,9 +136,6 @@ private:
 	Hex **_hexes;
 	HexPositions *_positions;
 };
-
-DECLARE_DESCRIBER(bed)
-DECLARE_DESCRIBER(desk)
 
 namespace HexNS
 {

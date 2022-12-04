@@ -314,10 +314,10 @@ int get_max_pos(std::map<int, int> hex_positions)
 	return max_value;
 }
 
-std::map<int, float> calculate_pixel_pos_map(Hexes *hexes, std::map<int, int> hex_positions, bool is_x)
+void HexPositions::calculate_pixel_pos_map(bool is_x)
 {
-	std::map<int, float> led_pos_map;
-
+	Hexes *hexes = (Hexes *)_hexes;
+	std::map<int, int> hex_positions = is_x ? hex_positions_x : hex_positions_y;
 	int max_pos = get_max_pos(hex_positions) + 1;
 	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
@@ -332,23 +332,16 @@ std::map<int, float> calculate_pixel_pos_map(Hexes *hexes, std::map<int, int> he
 			}
 			float led_pos = (float)hex_pos + led_relative_pos;
 			float super_relative_pos = led_pos / (float)max_pos;
-			led_pos_map[hex->get_at_index(j)] = super_relative_pos;
+			if (is_x)
+			{
+				led_pos_map_x[hex->get_at_index(j)] = super_relative_pos;
+			}
+			else
+			{
+				led_pos_map_y[hex->get_at_index(j)] = super_relative_pos;
+			}
 		}
 	}
-
-	return led_pos_map;
-}
-
-void HexPositions::ensure_pos_maps()
-{
-	if (_pos_maps_set)
-	{
-		return;
-	}
-	Hexes *hexes = (Hexes *)_hexes;
-	_led_pos_map_x = calculate_pixel_pos_map(hexes, hex_positions_x, true);
-	_led_pos_map_y = calculate_pixel_pos_map(hexes, hex_positions_y, false);
-	_pos_maps_set = true;
 }
 
 HexPositions::HexPositions(void *hexes_)
@@ -359,16 +352,9 @@ HexPositions::HexPositions(void *hexes_)
 	hex_positions_y = get_hexes_y_positions(hexes);
 	hex_positions_x_relative = get_relative_positions(hex_positions_x);
 	hex_positions_y_relative = get_relative_positions(hex_positions_y);
-}
-
-std::map<int, float> HexPositions::get_led_pos_map_x()
-{
-	ensure_pos_maps();
-	return _led_pos_map_x;
-}
-
-std::map<int, float> HexPositions::get_led_pos_map_y()
-{
-	ensure_pos_maps();
-	return _led_pos_map_y;
+	calculate_pixel_pos_map(true);
+	// This is needed or the entire thing crashes
+	delay(100);
+	calculate_pixel_pos_map(false);
+	delay(100);
 }

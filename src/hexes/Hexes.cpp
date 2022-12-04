@@ -57,11 +57,11 @@ int Hexes::get_hex_y_pos_for_index(int index)
 
 float Hexes::get_led_x_pos_for_index(int led_index)
 {
-	return _positions->get_led_pos_map_x()[led_index];
+	return _positions->led_pos_map_x[led_index];
 }
 float Hexes::get_led_y_pos_for_index(int led_index)
 {
-	return _positions->get_led_pos_map_y()[led_index];
+	return _positions->led_pos_map_y[led_index];
 }
 
 Hexes::Hexes(Hex **passed_hexes, unsigned int passed_num_hexes)

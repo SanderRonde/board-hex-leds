@@ -23,13 +23,13 @@ bool Rainbow::loop(Hexes *hexes)
 
 	int rounded_offset = (int)round(_offset);
 
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		Hex *hex = hexes->get_by_index(i);
 		int hex_led_step = (int)Util::divide(MAX_CSHV_VALUE_MOD, hex->num_leds);
 
 		int total_step = rounded_offset;
-		for (int j = 0; j < hex->num_leds; j++, total_step = (hex_led_step + total_step) % MAX_CSHV_VALUE_MOD)
+		for (size_t j = 0; j < hex->num_leds; j++, total_step = (hex_led_step + total_step) % MAX_CSHV_VALUE_MOD)
 		{
 			hex->set_at_index(j, CHSV(total_step, MAX_CSHV_VALUE, MAX_CSHV_VALUE));
 		}

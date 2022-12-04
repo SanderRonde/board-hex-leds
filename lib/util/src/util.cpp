@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <string.h>
 #include <FastLED.h>
+#include "util.h"
 
 namespace Util
 {

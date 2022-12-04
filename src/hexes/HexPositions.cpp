@@ -87,7 +87,7 @@ std::map<int, int> get_hexes_x_positions(Hexes *hexes)
 {
 	std::vector<std::vector<int>> columns;
 	std::vector<int> *vector_out = NULL;
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);
 
@@ -224,7 +224,7 @@ std::map<int, int> get_hexes_y_positions(Hexes *hexes)
 	// First build rows
 	std::vector<std::vector<int>> rows;
 	std::vector<int> *vector_out = NULL;
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);
 
@@ -304,11 +304,71 @@ std::map<int, float> get_relative_positions(std::map<int, int> positions)
 	return relative_postitions;
 }
 
+int get_max_pos(std::map<int, int> hex_positions)
+{
+	int max_value = 0;
+	for (const auto &pair : hex_positions)
+	{
+		max_value = max(max_value, pair.second);
+	}
+	return max_value;
+}
+
+std::map<int, float> calculate_pixel_pos_map(Hexes *hexes, std::map<int, int> hex_positions, bool is_x)
+{
+	std::map<int, float> led_pos_map;
+
+	int max_pos = get_max_pos(hex_positions) + 1;
+	for (size_t i = 0; i < hexes->num_hexes; i++)
+	{
+		auto hex = hexes->get_by_index(i);
+		auto hex_pos = hex_positions[hex->index];
+		for (size_t j = 0; j < hex->num_leds; j++)
+		{
+			float led_relative_pos = hex->get_relative_pos_for_index(j, is_x);
+			if (!is_x)
+			{
+				led_relative_pos = 1 - led_relative_pos;
+			}
+			float led_pos = (float)hex_pos + led_relative_pos;
+			float super_relative_pos = led_pos / (float)max_pos;
+			led_pos_map[hex->get_at_index(j)] = super_relative_pos;
+		}
+	}
+
+	return led_pos_map;
+}
+
+void HexPositions::ensure_pos_maps()
+{
+	if (_pos_maps_set)
+	{
+		return;
+	}
+	Hexes *hexes = (Hexes *)_hexes;
+	_led_pos_map_x = calculate_pixel_pos_map(hexes, hex_positions_x, true);
+	_led_pos_map_y = calculate_pixel_pos_map(hexes, hex_positions_y, false);
+	_pos_maps_set = true;
+}
+
 HexPositions::HexPositions(void *hexes_)
 {
 	Hexes *hexes = (Hexes *)hexes_;
+	_hexes = hexes;
 	hex_positions_x = get_hexes_x_positions(hexes);
 	hex_positions_y = get_hexes_y_positions(hexes);
 	hex_positions_x_relative = get_relative_positions(hex_positions_x);
 	hex_positions_y_relative = get_relative_positions(hex_positions_y);
+}
+
+std::map<int, float> HexPositions::get_led_pos_map_x()
+{
+	ensure_pos_maps();
+	return _led_pos_map_x;
+}
+
+std::map<int, float> HexPositions::get_led_pos_map_y()
+{
+	ensure_pos_maps();
+	return _led_pos_map_y;
 }

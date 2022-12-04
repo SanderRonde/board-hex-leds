@@ -1,13 +1,13 @@
 #include <ArduinoOTA.h>
 #include <Arduino.h>
-#include <effects.h>
-#include <config.h>
-#include <api.h>
-#include <telnet.h>
-#include <leds.h>
-#include <ota.h>
-#include <net.h>
-#include <hex.h>
+#include "effects.h"
+#include "config.h"
+#include "api.h"
+#include "telnet.h"
+#include "leds.h"
+#include "ota.h"
+#include "net.h"
+#include "hex.h"
 
 void setup()
 {

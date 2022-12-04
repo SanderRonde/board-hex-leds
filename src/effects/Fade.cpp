@@ -1,6 +1,7 @@
 #include "leds.h"
 #include "effects/Fade.h"
 #include "effects/EffectBase.h"
+#include "color-util.h"
 
 FADE_DIRECTION parse_direction_str(String direction_str)
 {
@@ -21,29 +22,6 @@ FADE_DIRECTION parse_direction_str(String direction_str)
 		return FADE_BOT;
 	}
 	throw std::exception();
-}
-
-std::map<int, float> Fade::calculate_pos_map(Hexes *hexes)
-{
-	std::map<int, float> led_pos_map;
-
-	bool is_x = _direction == FADE_RIGHT || _direction == FADE_LEFT;
-	int max_pos = (is_x ? hexes->get_x_max_pos() : hexes->get_y_max_pos()) + 1;
-	Serial.printf("MAx pos=%d\n", max_pos);
-	for (int i = 0; i < hexes->num_hexes; i++)
-	{
-		auto hex = hexes->get_by_index(i);
-		auto hex_pos = (is_x ? hexes->get_x_pos_for_index(hex->index) : hexes->get_y_pos_for_index(hex->index));
-		for (int j = 0; j < hex->num_leds; j++)
-		{
-			float led_relative_pos = hex->get_relative_pos_for_index(j, is_x);
-			float led_pos = (float)hex_pos + led_relative_pos;
-			float super_relative_pos = led_pos / (float)max_pos;
-			led_pos_map[hex->get_at_index(j)] = super_relative_pos;
-		}
-	}
-
-	return led_pos_map;
 }
 
 Fade::Fade(Hexes *hexes, RequestObj *request) : EffectBase()
@@ -75,15 +53,6 @@ Fade::Fade(Hexes *hexes, RequestObj *request) : EffectBase()
 	}
 
 	_last_iteration = millis();
-	_led_pos_map = calculate_pos_map(hexes);
-}
-
-CRGB fade_towards_color(CRGB from, CRGB to, float amount)
-{
-	return CRGB(
-			floor(from.r * (1 - amount) + (to.r * amount)),
-			floor(from.g * (1 - amount) + (to.g * amount)),
-			floor(from.b * (1 - amount) + (to.b * amount)));
 }
 
 bool Fade::loop(Hexes *hexes)
@@ -113,16 +82,17 @@ bool Fade::loop(Hexes *hexes)
 		}
 	}
 
+	bool is_x = _direction == FADE_LEFT || _direction == FADE_RIGHT;
 	bool invert = _direction == FADE_BOT || _direction == FADE_LEFT;
 	auto from_color = Change::get_current_color(_from_color);
 	auto to_color = Change::get_current_color(_to_color);
 
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);
-		for (int j = 0; j < hex->num_leds; j++)
+		for (size_t j = 0; j < hex->num_leds; j++)
 		{
-			float led_relative_pos = _led_pos_map[hex->get_at_index(j)];
+			float led_relative_pos = is_x ? hex->get_led_global_x_position_at_index(j) : hex->get_led_global_y_position_at_index(j);
 
 			if (invert)
 			{

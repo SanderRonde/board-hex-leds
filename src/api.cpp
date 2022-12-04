@@ -216,6 +216,18 @@ private:
 		return response->success();
 	}
 
+	static int _route_set_fire(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::enable_fire();
+		return response->success();
+	}
+
+	static int _route_set_fire_sparkles(RequestObj *request, ResponseObj *response)
+	{
+		Effects::Effects::enable_fire_sparkles();
+		return response->success();
+	}
+
 	static int _route_set_led(RequestObj *request, ResponseObj *response)
 	{
 		Effects::Effects::set_led(request);
@@ -305,6 +317,8 @@ public:
 		_server->on("/set_rainbow_hex", HTTP_POST, _route(_container, _route_rainbow_hex));
 		_server->on("/set_all", HTTP_POST, _route(_container, _route_set_all));
 		_server->on("/effects/rainbow", HTTP_POST, _route(_container, _route_set_rainbow));
+		_server->on("/effects/fire", HTTP_POST, _route(_container, _route_set_fire));
+		_server->on("/effects/fire_sparkles", HTTP_POST, _route(_container, _route_set_fire_sparkles));
 		_server->on("/effects/edge_rainbow", HTTP_POST, _route(_container, _route_set_edge_rainbow));
 		_server->on("/effects/move", HTTP_POST, _route(_container, _route_set_move));
 		_server->on("/effects/random_colors_gradual", HTTP_POST, _route(_container, _route_set_random_colors_gradual));

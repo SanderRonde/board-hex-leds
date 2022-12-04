@@ -30,7 +30,8 @@ void shift_array_once(T *arr, int arr_len)
 template <class T>
 void shift_array(T *arr, int arr_len, int shift_amount)
 {
-	if (shift_amount < 0) {
+	if (shift_amount < 0)
+	{
 		shift_amount += arr_len;
 	}
 	for (int i = 0; i < shift_amount; i++)
@@ -83,7 +84,7 @@ void Hex::set_at_index(int index, CRGB color)
 
 void Hex::set_color(CRGB color)
 {
-	for (int i = 0; i < num_leds; i++)
+	for (size_t i = 0; i < num_leds; i++)
 	{
 		Leds::leds[_led_indices[i]] = color;
 	}
@@ -99,12 +100,30 @@ Hex *Hex::get_neighbour(hex_side_t side)
 	return ((Hexes *)parent)->get_by_id(side_id);
 }
 
-Hex *Hex::get_neighbour_at_led(int led_index)
+hex_side_t Hex::get_side_at_index(int led_index)
 {
 	int side_index_unfixed = (int)floor((Util::divide(led_index, num_leds) * HEX_SIDES) - 0.5);
-	int side_index = (HEX_SIDES + side_index_unfixed) % HEX_SIDES;
+	return (hex_side_t)((HEX_SIDES + side_index_unfixed) % HEX_SIDES);
+}
 
-	return get_neighbour((hex_side_t)side_index);
+Hex *Hex::get_neighbour_hex_at_led(int led_index)
+{
+	return get_neighbour(get_side_at_index(led_index));
+}
+
+int Hex::get_neighbour_led_at_led(int led_index)
+{
+	auto neighbour = get_neighbour_hex_at_led(led_index);
+	if (neighbour == NULL)
+	{
+		return -1;
+	}
+
+	// Get LED at angle ANGLE-180
+	int self_led_angle = get_angle_at_index(led_index);
+	int neighbour_led_angle = (self_led_angle + 180) % 360;
+
+	return neighbour->get_led_at_angle(neighbour_led_angle);
 }
 
 /**
@@ -114,6 +133,25 @@ Hex *Hex::get_neighbour_at_led(int led_index)
 float Hex::get_step_size_for_revolution(long revolution_time)
 {
 	return revolution_time / num_leds;
+}
+
+int Hex::get_led_at_angle(int angle)
+{
+	int smallest_diff = 0;
+	int smallest_diff_index = 0;
+
+	for (size_t i = 0; i < num_leds; i++)
+	{
+		int led_angle = get_angle_at_index(i);
+		int diff = abs(led_angle - angle);
+		if (diff < smallest_diff)
+		{
+			smallest_diff = diff;
+			smallest_diff_index = i;
+		}
+	}
+
+	return smallest_diff_index;
 }
 
 int Hex::get_angle_at_index(int index)
@@ -128,15 +166,39 @@ int Hex::get_angle_aligned_with_x_for_index(int index)
 	return (angle + (FULL_ROTATION_ANGLE / 4)) % FULL_ROTATION_ANGLE;
 }
 
-float Hex::get_relative_pos_for_index(int index, bool is_x)
+/**
+ * Left is 0, right is 1
+ */
+float Hex::get_relative_x_pos_for_index(int index)
 {
 	int angle = get_angle_aligned_with_x_for_index(index);
-	if (is_x)
-	{
-		return ((cos(radians(angle))) + 1) / 2;
-	}
-	else
-	{
-		return ((sin(radians(angle))) + 1) / 2;
-	}
+	return ((cos(radians(angle))) + 1) / 2;
+}
+
+/**
+ * Top is 0, bottom is 1
+ */
+float Hex::get_relative_y_pos_for_index(int index)
+{
+	int angle = get_angle_aligned_with_x_for_index(index);
+	return ((sin(radians(angle))) + 1) / 2;
+}
+
+/**
+ * Left is 0, right is 1
+ * Top is 0, bottom is 1
+ */
+float Hex::get_relative_pos_for_index(int index, bool is_x)
+{
+	return is_x ? get_relative_x_pos_for_index(index) : get_relative_y_pos_for_index(index);
+}
+
+float Hex::get_led_global_x_position_at_index(int led_index)
+{
+	return ((Hexes *)parent)->get_led_x_pos_for_index(get_at_index(led_index));
+}
+
+float Hex::get_led_global_y_position_at_index(int led_index)
+{
+	return ((Hexes *)parent)->get_led_y_pos_for_index(get_at_index(led_index));
 }

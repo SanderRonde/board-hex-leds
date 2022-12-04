@@ -9,7 +9,7 @@ RandomColorsGradual::RandomColorsGradual(Hexes *hexes, RequestObj *request) : Ef
 	_neighbour_influence = request->intv("neighbour_influence");
 	_use_pastel = request->boolv("use_pastel");
 	_use_split = request->boolv("use_split");
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		split_color_t prev;
 		prev.first_half_color.next = random(0, MAX_CSHV_VALUE);
@@ -26,17 +26,17 @@ bool RandomColorsGradual::loop(Hexes *hexes)
 	int time_diff = millis() - _last_iteration;
 	_last_iteration = millis();
 
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		Split::bump_progress(&_colors[i], time_diff);
 		_colors[i] = Split::change_on_total_reached(_colors[i], _wait_time_min, _wait_time_max);
 
 		Hex *hex = _colors[i].hex;
 
-		for (int j = 0; j < hex->num_leds; j++)
+		for (size_t j = 0; j < hex->num_leds; j++)
 		{
 			CRGB current_color = _use_pastel ? Split::get_current_color(_colors[i], j) : CHSV(Split::get_current_value(_colors[i], j), MAX_CSHV_VALUE, MAX_CSHV_VALUE);
-			Hex *neighbour = hex->get_neighbour_at_led(j);
+			Hex *neighbour = hex->get_neighbour_hex_at_led(j);
 
 			if (neighbour == NULL)
 			{

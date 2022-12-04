@@ -7,6 +7,8 @@
 #include "constants.h"
 #include "effects.h"
 #include "effects/Rainbow.h"
+#include "effects/Fire.h"
+#include "effects/FireSparkles.h"
 #include "effects/EdgeRainbow.h"
 #include "effects/MoveAround.h"
 #include "effects/RandomColors.h"
@@ -79,12 +81,12 @@ namespace Effects
 			// For debugging
 			enable();
 			stop_animation();
-			for (int i = 0; i < hexes->num_hexes; i++)
+			for (size_t i = 0; i < hexes->num_hexes; i++)
 			{
 				hexes->get_by_index(i)->set_color(CRGB::Black);
 			}
 			Hex *hex = hexes->get_by_id(request->intv("hex_id"));
-			for (int i = 0; i < hex->num_leds; i++) {
+			for (size_t i = 0; i < hex->num_leds; i++) {
 				float percentage = (float)i / (float)hex->num_leds;
 				hex->set_at_index(i, CHSV(floor(percentage * 255.0f), 255, 255));
 			}
@@ -96,7 +98,7 @@ namespace Effects
 			enable();
 			stop_animation();
 			CRGB color = request->colorv("color");
-			for (int i = 0; i < hexes->num_hexes; i++)
+			for (size_t i = 0; i < hexes->num_hexes; i++)
 			{
 				hexes->get_by_index(i)->set_color(color);
 			}
@@ -106,6 +108,16 @@ namespace Effects
 		void enable_rainbow(RequestObj *request)
 		{
 			set_effect(new Rainbow(request));
+		}
+
+		void enable_fire()
+		{
+			set_effect(new Fire(hexes));
+		}
+
+		void enable_fire_sparkles()
+		{
+			set_effect(new FireSparkles(hexes));
 		}
 
 		void enable_edge_rainbow(RequestObj *request)

@@ -176,7 +176,7 @@ bool MoveAround::loop(Hexes *hexes)
 		// Find color
 		int current_hue = Change::get_current_value(_background_colors[hex_idx]);
 #ifdef MOVE_SAME_BACKGROUND
-		for (int i = 0; i < hexes->num_hexes; i++)
+		for (size_t i = 0; i < hexes->num_hexes; i++)
 		{
 			hex = hexes->get_by_index(i);
 #endif
@@ -233,7 +233,7 @@ bool MoveAround::loop(Hexes *hexes)
 				int hex_index = j == 0 ? _high_intensity_hexes[i].move_change.current : _high_intensity_hexes[i].move_change.next;
 
 				hex = hexes->get_by_index(i);
-				for (int k = 0; k < hex->num_leds; k++)
+				for (size_t k = 0; k < hex->num_leds; k++)
 				{
 					int distance_to_center = get_distance_between_led_and_center(progress, side_angle, hex->get_angle_at_index(k));
 

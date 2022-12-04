@@ -42,8 +42,22 @@ public:
 	std::map<int, float> hex_positions_x_relative;
 	// A map from hex index to their Y position (BTT)
 	std::map<int, float> hex_positions_y_relative;
+	// A map from led index to their X position (LTR)
 
 	HexPositions(void *hexes);
+	// A map from led index to their X position (LTR)
+	std::map<int, float> get_led_pos_map_x();
+	// A map from led index to their Y position (BTT)
+	std::map<int, float> get_led_pos_map_y();
+
+private:
+	void *_hexes;
+	bool _pos_maps_set = false;
+	void ensure_pos_maps();
+	// A map from led index to their X position (LTR)
+	std::map<int, float> _led_pos_map_x;
+	// A map from led index to their Y position (BTT)
+	std::map<int, float> _led_pos_map_y;
 };
 
 class Hex
@@ -52,7 +66,7 @@ public:
 	void *parent;
 	int id;
 	int index;
-	int num_leds;
+	size_t num_leds;
 
 	Hex(hex_describer_t described_hex);
 	~Hex();
@@ -61,12 +75,19 @@ public:
 	int get_at_index(int index);
 	void set_at_index(int index, CRGB color);
 	void set_color(CRGB color);
+	int get_led_at_angle(int angle);
 	int get_angle_at_index(int index);
 	int get_angle_aligned_with_x_for_index(int index);
+	float get_relative_x_pos_for_index(int index);
+	float get_relative_y_pos_for_index(int index);
 	float get_relative_pos_for_index(int index, bool is_y);
+	float get_led_global_x_position_at_index(int led_index);
+	float get_led_global_y_position_at_index(int led_index);
 
+	hex_side_t get_side_at_index(int led_index);
 	Hex *get_neighbour(hex_side_t side);
-	Hex *get_neighbour_at_led(int led_index);
+	Hex *get_neighbour_hex_at_led(int led_index);
+	int get_neighbour_led_at_led(int led_index);
 
 	/**
 	 * Calculate the step size in order to reach a full
@@ -89,10 +110,12 @@ public:
 	void set_led_at_index(int index, CRGB color);
 	int get_x_max_pos();
 	int get_y_max_pos();
-	int get_x_pos_for_index(int index);
-	int get_y_pos_for_index(int index);
+	int get_hex_x_pos_for_index(int index);
+	int get_hex_y_pos_for_index(int index);
+	float get_led_x_pos_for_index(int led_index);
+	float get_led_y_pos_for_index(int led_index);
 	Hexes *hexes = NULL;
-	int num_hexes;
+	size_t num_hexes;
 
 	static Hexes *from_described(const hex_describer_t hexes[], size_t num_hexes);
 

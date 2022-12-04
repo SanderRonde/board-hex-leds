@@ -32,8 +32,6 @@ private:
 
 	unsigned long _last_iteration;
 
-	std::map<int, float> _led_pos_map;
-
 public:
 	Fade(Hexes* hexes, RequestObj *request);
 	std::map<int, float> calculate_pos_map(Hexes* hexes);

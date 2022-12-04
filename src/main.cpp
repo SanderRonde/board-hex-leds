@@ -17,11 +17,11 @@ void setup()
 	// Setup telnet
 	Telnet::setup(NAME);
 
-	// Setup OTA and wait
-	OTA::setup();
-	LOGN("Booted. Waiting for possible OTAs");
-	OTA::wait_for_otas();
-	LOGN("Stopped waiting");
+	// // Setup OTA and wait
+	// OTA::setup();
+	// LOGN("Booted. Waiting for possible OTAs");
+	// OTA::wait_for_otas();
+	// LOGN("Stopped waiting");
 
 	// Setup the rest
 	Net::setup();

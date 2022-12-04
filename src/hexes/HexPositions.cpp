@@ -325,11 +325,7 @@ void HexPositions::calculate_pixel_pos_map(bool is_x)
 		auto hex_pos = hex_positions[hex->index];
 		for (size_t j = 0; j < hex->num_leds; j++)
 		{
-			float led_relative_pos = hex->get_relative_pos_for_index(j, is_x);
-			if (!is_x)
-			{
-				led_relative_pos = 1 - led_relative_pos;
-			}
+			float led_relative_pos = 1 - hex->get_relative_pos_for_index(j, is_x);
 			float led_pos = (float)hex_pos + led_relative_pos;
 			float super_relative_pos = led_pos / (float)max_pos;
 			if (is_x)

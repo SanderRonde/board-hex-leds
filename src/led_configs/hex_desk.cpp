@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const hex_describer_t described_hexes_desk[] = {
+DEFINE_DESCRIBER(desk) = {
 		{.id = 1, .offset_percentage = 0, .invert_order = true, .borders = {-1, 2, 8, 7, 18, 6}, .leds = {498, 270, 269, 268, 267, 266, 265, 264, 263, 262, 497, 288, 287, 286, 285, 284, 283, 282, 281, 280, 279, 278, 277, 276, 275, 274, 273, 272, 271, -1}},
 		{.id = 2, .offset_percentage = -10, .invert_order = true, .borders = {3, 10, 9, 8, 1, -1}, .leds = {445, 444, 443, 442, 441, 440, 439, 438, 437, 436, 435, 434, 433, 432, 431, 430, 49, 48, 47, 46, 45, 451, 450, 449, 448, 446, 447, -1}},
 		{.id = 3, .offset_percentage = 20, .invert_order = false, .borders = {12, 11, 10, 2, -1, 4}, .leds = {72, 73, 74, 75, 76, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, -1}},
@@ -22,4 +22,4 @@ const hex_describer_t described_hexes_desk[] = {
 		{.id = 17, .offset_percentage = 40, .invert_order = false, .borders = {16, 6, 18, -1, -1, -1}, .leds = {199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 249, 250, 251, 252, -1}},
 		{.id = 18, .offset_percentage = 0, .invert_order = true, .borders = {6, 1, 7, -1, -1, 17}, .leds = {229, 228, 227, 226, 225, 224, 223, 222, 221, 248, 247, 246, 245, 244, 243, 242, 241, 240, 239, 238, 237, 236, 235, 234, 233, 232, 231, 230, -1}}};
 
-size_t num_hexes_desk = sizeof(described_hexes_desk) / sizeof(hex_describer_t);
+DEFINE_DESCRIBER_SIZE(desk)

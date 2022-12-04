@@ -8,6 +8,19 @@
 #define MAX_JSON_DOC_SIZE 2048
 #define FULL_ROTATION_ANGLE 360
 #define ANGLE_PER_SIDE (FULL_ROTATION_ANGLE / HEX_SIDES)
+#define DECLARE_DESCRIBER(name) \
+	extern const hex_describer_t described_hexes_##name[]; \
+	extern size_t num_hexes_##name;
+#define DEFINE_DESCRIBER(name) \
+	const hex_describer_t described_hexes_##name[]
+#define DEFINE_DESCRIBER_SIZE(name) \
+	size_t num_hexes_##name = sizeof(described_hexes_##name) / sizeof(hex_describer_t);
+#define _USE_DESCRIBER(name) \
+	described_hexes_##name
+#define _USE_DESCRIBER_NUM(name) \
+	num_hexes_##name
+#define USE_DESCRIBER(name) _USE_DESCRIBER(name)
+#define USE_DESCRIBER_NUM(name) _USE_DESCRIBER_NUM(name)
 
 typedef struct hex_describer
 {
@@ -124,10 +137,8 @@ private:
 	HexPositions *_positions;
 };
 
-extern const hex_describer_t described_hexes_bed[];
-extern const hex_describer_t described_hexes_desk[];
-extern size_t num_hexes_bed;
-extern size_t num_hexes_desk;
+DECLARE_DESCRIBER(bed)
+DECLARE_DESCRIBER(desk)
 
 namespace HexNS
 {

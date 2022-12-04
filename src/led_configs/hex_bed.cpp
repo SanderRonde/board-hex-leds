@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-const hex_describer_t described_hexes_bed[] = {
+DEFINE_DESCRIBER(bed) = {
 		{.id = 1,
 		 .offset_percentage = 0,
 		 .invert_order = true,
@@ -139,5 +139,4 @@ const hex_describer_t described_hexes_bed[] = {
 		{.id = 9, .offset_percentage = 40, .invert_order = false, .borders = {-1, -1, -1, 10, 7, -1}, .leds = {133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, -1}},
 		{.id = 10, .offset_percentage = 0, .invert_order = true, .borders = {9, -1, -1, -1, 8, 7}, .leds = {68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 77, 76, 75, 74, 73, 72, 71, 70, 69, -1}}};
 
-size_t num_hexes_bed = sizeof(described_hexes_bed) / sizeof(hex_describer_t);
-
+DEFINE_DESCRIBER_SIZE(bed)

@@ -22,7 +22,7 @@ const int SPARK_CHANCE = 5;
 std::vector<std::vector<Hex *>> get_columns(Hexes *hexes)
 {
 	std::map<int, std::map<int, Hex *>> unsorted_columns;
-	for (size_t i = 0; i < NUM_HEXES; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		int x_offset = hexes->get_hex_x_pos_for_index(i);
 		int y_offset = hexes->get_hex_y_pos_for_index(i);
@@ -108,7 +108,7 @@ Fire::Fire(Hexes *hexes) : EffectBase()
 bool Fire::loop(Hexes *hexes)
 {
 	// Bottom layer fades, the rest is red
-	for (size_t i = 0; i < NUM_HEXES; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		hexes->get_by_index(i)->set_color(FIRE_RED);
 	}

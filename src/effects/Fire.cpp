@@ -70,7 +70,6 @@ Spark::Spark(std::vector<Hex *> *column)
 {
 	this->column = column;
 	this->progress = 0;
-	this->disabled = false;
 	this->heat = random(MIN_HEAT, MAX_HEAT);
 }
 
@@ -88,7 +87,9 @@ bool Spark::loop(Hexes *hexes)
 // TODO: should require RequestObj and get its params from that
 Fire::Fire(Hexes *hexes) : EffectBase()
 {
+	yield();
 	_columns = get_columns(hexes);
+	yield();
 
 	for (size_t i = 0; i < _columns.size(); i++)
 	{
@@ -142,10 +143,6 @@ bool Fire::loop(Hexes *hexes)
 		for (size_t j = 0; j < sparks_in_column->size(); j++)
 		{
 			auto spark = sparks_in_column->at(j);
-			if (spark->disabled)
-			{
-				continue;
-			}
 			int current_index = spark->progress;
 			byte current_heat = 255;
 			while (current_heat > 0 && current_index <= 255)
@@ -194,10 +191,8 @@ bool Fire::loop(Hexes *hexes)
 			for (int j = (int)sparks_in_column->size() - 1; j >= 0; j--)
 			{
 				auto spark = sparks_in_column->at(j);
-				if (!spark->disabled && !spark->loop(hexes))
+				if (!spark->loop(hexes))
 				{
-					// TODO:(sander)
-					spark->disabled = true;
 					sparks_in_column->erase(sparks_in_column->begin() + j);
 					delete spark;
 				}

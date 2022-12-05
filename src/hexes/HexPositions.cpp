@@ -345,12 +345,16 @@ HexPositions::HexPositions(void *hexes_)
 	Hexes *hexes = (Hexes *)hexes_;
 	_hexes = hexes;
 	hex_positions_x = get_hexes_x_positions(hexes);
+	// Yield a bunch between heavy operations
+	yield();
 	hex_positions_y = get_hexes_y_positions(hexes);
+	yield();
 	hex_positions_x_relative = get_relative_positions(hex_positions_x);
+	yield();
 	hex_positions_y_relative = get_relative_positions(hex_positions_y);
+	yield();
 	calculate_pixel_pos_map(true);
-	// This is needed or the entire thing crashes
-	delay(100);
+	yield();
 	calculate_pixel_pos_map(false);
-	delay(100);
+	yield();
 }

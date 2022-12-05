@@ -1,6 +1,7 @@
 #include <ArduinoOTA.h>
 #include <Arduino.h>
 #include "effects.h"
+#include "effects/Fade.h"
 #include "config.h"
 #include "api.h"
 #include "telnet.h"
@@ -38,8 +39,8 @@ void setup()
 
 void loop()
 {
-	OTA::loop();
-	// Telnet::loop();
+	// OTA::loop();
+	Telnet::loop();
 	API::loop();
 
 	Effects::loop();

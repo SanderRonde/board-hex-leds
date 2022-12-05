@@ -142,7 +142,7 @@ namespace Effects
 
 		void fade(RequestObj *request)
 		{
-			set_effect(new Fade(hexes, request));
+			set_effect(new FadeFromReq(hexes, request));
 		}
 	}
 
@@ -200,7 +200,8 @@ namespace Effects
 	{
 		if (animating && enabled && effect)
 		{
-			effect->loop(hexes);
+			bool draw = effect->loop(hexes);
+			yield();
 
 			if (enabling || disabling)
 			{
@@ -235,7 +236,9 @@ namespace Effects
 				}
 			}
 
-			FastLED.show();
+			if (draw) {
+				FastLED.show();
+			}
 		}
 	}
 }

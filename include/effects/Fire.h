@@ -13,7 +13,6 @@ public:
 	std::vector<Hex *>* column;
 	/** Starts at 0, moves to 255 */
 	byte progress;
-	bool disabled;
 	int heat;
 
 	Spark(std::vector<Hex *>* column);

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <FastLED.h>
+#include "config.h"
+#include "leds.h"
 #include <map>
 
 #define HEX_SIDES 6
@@ -52,7 +54,7 @@ public:
 	void *parent;
 	int id;
 	int index;
-	int num_leds;
+	size_t num_leds;
 
 	Hex(hex_describer_t described_hex);
 	~Hex();
@@ -92,7 +94,7 @@ public:
 	int get_x_pos_for_index(int index);
 	int get_y_pos_for_index(int index);
 	Hexes *hexes = NULL;
-	int num_hexes;
+	size_t num_hexes;
 
 	static Hexes *from_described(const hex_describer_t hexes[], size_t num_hexes);
 

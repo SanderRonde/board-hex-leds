@@ -304,11 +304,57 @@ std::map<int, float> get_relative_positions(std::map<int, int> positions)
 	return relative_postitions;
 }
 
+int get_max_pos(std::map<int, int> hex_positions)
+{
+	int max_value = 0;
+	for (const auto &pair : hex_positions)
+	{
+		max_value = max(max_value, pair.second);
+	}
+	return max_value;
+}
+
+void HexPositions::calculate_pixel_pos_map(bool is_x)
+{
+	Hexes *hexes = (Hexes *)_hexes;
+	std::map<int, int> hex_positions = is_x ? hex_positions_x : hex_positions_y;
+	int max_pos = get_max_pos(hex_positions) + 1;
+	for (size_t i = 0; i < hexes->num_hexes; i++)
+	{
+		auto hex = hexes->get_by_index(i);
+		auto hex_pos = hex_positions[hex->index];
+		for (size_t j = 0; j < hex->num_leds; j++)
+		{
+			float led_relative_pos = 1 - hex->get_relative_pos_for_index(j, is_x);
+			float led_pos = (float)hex_pos + led_relative_pos;
+			float super_relative_pos = led_pos / (float)max_pos;
+			if (is_x)
+			{
+				led_pos_map_x[hex->get_at_index(j)] = super_relative_pos;
+			}
+			else
+			{
+				led_pos_map_y[hex->get_at_index(j)] = super_relative_pos;
+			}
+		}
+	}
+}
+
 HexPositions::HexPositions(void *hexes_)
 {
 	Hexes *hexes = (Hexes *)hexes_;
+	_hexes = hexes;
 	hex_positions_x = get_hexes_x_positions(hexes);
+	// Yield a bunch between heavy operations
+	yield();
 	hex_positions_y = get_hexes_y_positions(hexes);
+	yield();
 	hex_positions_x_relative = get_relative_positions(hex_positions_x);
+	yield();
 	hex_positions_y_relative = get_relative_positions(hex_positions_y);
+	yield();
+	calculate_pixel_pos_map(true);
+	yield();
+	calculate_pixel_pos_map(false);
+	yield();
 }

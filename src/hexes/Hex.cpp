@@ -128,15 +128,39 @@ int Hex::get_angle_aligned_with_x_for_index(int index)
 	return (angle + (FULL_ROTATION_ANGLE / 4)) % FULL_ROTATION_ANGLE;
 }
 
-float Hex::get_relative_pos_for_index(int index, bool is_x)
+/**
+ * Left is 0, right is 1
+ */
+float Hex::get_relative_x_pos_for_index(int index)
 {
 	int angle = get_angle_aligned_with_x_for_index(index);
-	if (is_x)
-	{
-		return ((cos(radians(angle))) + 1) / 2;
-	}
-	else
-	{
-		return ((sin(radians(angle))) + 1) / 2;
-	}
+	return ((cos(radians(angle))) + 1) / 2;
+}
+
+/**
+ * Top is 0, bottom is 1
+ */
+float Hex::get_relative_y_pos_for_index(int index)
+{
+	int angle = get_angle_aligned_with_x_for_index(index);
+	return ((sin(radians(angle))) + 1) / 2;
+}
+
+/**
+ * Left is 0, right is 1
+ * Top is 0, bottom is 1
+ */
+float Hex::get_relative_pos_for_index(int index, bool is_x)
+{
+	return is_x ? get_relative_x_pos_for_index(index) : get_relative_y_pos_for_index(index);
+}
+
+float Hex::get_led_global_x_position_at_index(int led_index)
+{
+	return ((Hexes *)parent)->get_led_x_pos_for_index(get_at_index(led_index));
+}
+
+float Hex::get_led_global_y_position_at_index(int led_index)
+{
+	return ((Hexes *)parent)->get_led_y_pos_for_index(get_at_index(led_index));
 }

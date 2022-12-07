@@ -33,7 +33,7 @@ std::map<int, float> Fade::calculate_pos_map(Hexes *hexes)
 	for (int i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);
-		auto hex_pos = (is_x ? hexes->get_x_pos_for_index(hex->index) : hexes->get_y_pos_for_index(hex->index));
+		auto hex_pos = (is_x ? hexes->get_hex_x_pos_for_index(hex->index) : hexes->get_hex_y_pos_for_index(hex->index));
 		for (int j = 0; j < hex->num_leds; j++)
 		{
 			float led_relative_pos = hex->get_relative_pos_for_index(j, is_x);
@@ -78,14 +78,6 @@ Fade::Fade(Hexes *hexes, RequestObj *request) : EffectBase()
 	_led_pos_map = calculate_pos_map(hexes);
 }
 
-CRGB fade_towards_color(CRGB from, CRGB to, float amount)
-{
-	return CRGB(
-			floor(from.r * (1 - amount) + (to.r * amount)),
-			floor(from.g * (1 - amount) + (to.g * amount)),
-			floor(from.b * (1 - amount) + (to.b * amount)));
-}
-
 bool Fade::loop(Hexes *hexes)
 {
 	if (!_animate_from && !_animate_to && _rendered)
@@ -126,11 +118,11 @@ bool Fade::loop(Hexes *hexes)
 
 			if (invert)
 			{
-				hex->set_at_index(j, fade_towards_color(to_color, from_color, led_relative_pos));
+				hex->set_at_index(j, Util::fade_towards_color(to_color, from_color, led_relative_pos));
 			}
 			else
 			{
-				hex->set_at_index(j, fade_towards_color(from_color, to_color, led_relative_pos));
+				hex->set_at_index(j, Util::fade_towards_color(from_color, to_color, led_relative_pos));
 			}
 		}
 	}

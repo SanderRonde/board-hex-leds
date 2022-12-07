@@ -45,14 +45,23 @@ int Hexes::get_y_max_pos()
 	return max_value;
 }
 
-int Hexes::get_x_pos_for_index(int index)
+int Hexes::get_hex_x_pos_for_index(int index)
 {
 	return _positions->hex_positions_x[index];
 }
 
-int Hexes::get_y_pos_for_index(int index)
+int Hexes::get_hex_y_pos_for_index(int index)
 {
 	return _positions->hex_positions_y[index];
+}
+
+float Hexes::get_led_x_pos_for_index(int led_index)
+{
+	return _positions->led_pos_map_x[led_index];
+}
+float Hexes::get_led_y_pos_for_index(int led_index)
+{
+	return _positions->led_pos_map_y[led_index];
 }
 
 Hexes::Hexes(Hex **passed_hexes, unsigned int passed_num_hexes)

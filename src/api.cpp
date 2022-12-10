@@ -25,7 +25,7 @@ CRGB RequestObj::_parse_color(String color)
 	return color_obj;
 }
 
-RequestObj::RequestObj(ESP***REMOVED***WebServer *server) : _server(server) {}
+RequestObj::RequestObj(ESP8266WebServer *server) : _server(server) {}
 
 void RequestObj::_err(const char *arg_name)
 {
@@ -97,10 +97,10 @@ CRGB RequestObj::colorv(const char *arg_name, const char *default_val)
 class ResponseObj
 {
 private:
-	ESP***REMOVED***WebServer *_server;
+	ESP8266WebServer *_server;
 
 public:
-	ResponseObj(ESP***REMOVED***WebServer *server) : _server(server) {}
+	ResponseObj(ESP8266WebServer *server) : _server(server) {}
 
 public:
 	int success()
@@ -137,11 +137,11 @@ public:
 class RequestDataContainer
 {
 public:
-	ESP***REMOVED***WebServer *server;
+	ESP8266WebServer *server;
 	RequestObj *request;
 	ResponseObj *response;
 
-	RequestDataContainer(ESP***REMOVED***WebServer *server_,
+	RequestDataContainer(ESP8266WebServer *server_,
 											 RequestObj *request_,
 											 ResponseObj *response_) : server(server_), request(request_), response(response_)
 	{
@@ -153,7 +153,7 @@ class APIRequestHandler
 protected:
 	RequestObj *_request;
 	ResponseObj *_response;
-	ESP***REMOVED***WebServer *_server;
+	ESP8266WebServer *_server;
 	static std::function<void()> _route(RequestDataContainer *self, int (*handler)(RequestObj *, ResponseObj *))
 	{
 		return [=]() -> void
@@ -168,7 +168,7 @@ protected:
 	}
 
 public:
-	APIRequestHandler(ESP***REMOVED***WebServer *server) : _server(server)
+	APIRequestHandler(ESP8266WebServer *server) : _server(server)
 	{
 		_request = new RequestObj(server);
 		_response = new ResponseObj(server);
@@ -282,7 +282,7 @@ private:
 	}
 
 public:
-	RequestHandlerWithRoutes(ESP***REMOVED***WebServer *server) : APIRequestHandler(server)
+	RequestHandlerWithRoutes(ESP8266WebServer *server) : APIRequestHandler(server)
 	{
 		_container = new RequestDataContainer(_server, _request, _response);
 	}
@@ -316,7 +316,7 @@ public:
 
 namespace API
 {
-	ESP***REMOVED***WebServer server(SERVER_PORT);
+	ESP8266WebServer server(SERVER_PORT);
 	RequestHandlerWithRoutes router(&server);
 
 	void setup()

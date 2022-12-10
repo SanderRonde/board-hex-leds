@@ -1,6 +1,6 @@
 import { HexType } from "./components/HexCreator";
 
-export const HEX_IP = "***REMOVED***";
+export const HEX_IP = "192.168.1.121";
 export const DEFAULT_HEXES: HexType[] = [
     {
         id: 1,

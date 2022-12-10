@@ -5,7 +5,7 @@
 
 namespace OTA {
 	void setup() {
-		ArduinoOTA.setPort(***REMOVED***);
+		ArduinoOTA.setPort(8266);
 		ArduinoOTA.setPassword(SECRET_PW);
 		ArduinoOTA.onStart([]() {
 			String type;

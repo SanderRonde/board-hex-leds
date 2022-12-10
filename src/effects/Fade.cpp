@@ -35,7 +35,7 @@ std::map<int, float> Fade::calculate_pos_map(Hexes *hexes)
 		auto hex_pos = (is_x ? hexes->get_hex_x_pos_for_index(hex->index) : hexes->get_hex_y_pos_for_index(hex->index));
 		for (size_t j = 0; j < hex->num_leds; j++)
 		{
-			float led_relative_pos = hex->get_relative_pos_for_index(j, is_x);
+			float led_relative_pos = 1 - hex->get_relative_pos_for_index(j, is_x);
 			float led_pos = (float)hex_pos + led_relative_pos;
 			float super_relative_pos = led_pos / (float)max_pos;
 			led_pos_map[hex->get_at_index(j)] = super_relative_pos;

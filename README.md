@@ -1,6 +1,6 @@
 # ESP8266 board Hex driver
 
-This repo contains the code for an ESP8266 board driving an individually addressable LED strip. It uses the [FastLED](https://github.com/FastLED/FastLED) library to interface with the LEDs. The LEDs are placed inside of [hexagonal panels](https://www.thingiverse.com/thing:4742593).
+This repo contains the code for an ESP8266 board driving an individually addressable LED strip. It uses the [FastLED](https://github.com/FastLED/FastLED) library to interface with the LEDs. The LEDs are placed inside of [hexagonal panels](https://www.thingiverse.com/thing:4742593). The `fire` branch contains some additional code for a few fire effects, that for some reason make the device crash after exactly 8 minutes. This is probably due to some memory leak, but I've just switched it to a different branch for the time being.
 
 This project uses [PlatformIO](https://platformio.org/) for simple uploading and interfacing with the board itself.
 

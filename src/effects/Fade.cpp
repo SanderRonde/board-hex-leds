@@ -29,12 +29,11 @@ std::map<int, float> Fade::calculate_pos_map(Hexes *hexes)
 
 	bool is_x = _direction == FADE_RIGHT || _direction == FADE_LEFT;
 	int max_pos = (is_x ? hexes->get_x_max_pos() : hexes->get_y_max_pos()) + 1;
-	Serial.printf("MAx pos=%d\n", max_pos);
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);
 		auto hex_pos = (is_x ? hexes->get_hex_x_pos_for_index(hex->index) : hexes->get_hex_y_pos_for_index(hex->index));
-		for (int j = 0; j < hex->num_leds; j++)
+		for (size_t j = 0; j < hex->num_leds; j++)
 		{
 			float led_relative_pos = hex->get_relative_pos_for_index(j, is_x);
 			float led_pos = (float)hex_pos + led_relative_pos;
@@ -109,10 +108,10 @@ bool Fade::loop(Hexes *hexes)
 	auto from_color = Change::get_current_color(_from_color);
 	auto to_color = Change::get_current_color(_to_color);
 
-	for (int i = 0; i < hexes->num_hexes; i++)
+	for (size_t i = 0; i < hexes->num_hexes; i++)
 	{
 		auto hex = hexes->get_by_index(i);
-		for (int j = 0; j < hex->num_leds; j++)
+		for (size_t j = 0; j < hex->num_leds; j++)
 		{
 			float led_relative_pos = _led_pos_map[hex->get_at_index(j)];
 

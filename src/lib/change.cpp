@@ -46,6 +46,6 @@ namespace Change
 		CHSV current = CHSV(change.current, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 		CHSV next = CHSV(change.next, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 		double progress = Util::divide(change.progress, change.total);
-		return Util::fade_towards_color(current, next, progress * MAX_CSHV_VALUE);
+		return Util::fade_towards_color(current, next, progress);
 	}
 }

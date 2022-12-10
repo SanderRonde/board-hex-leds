@@ -176,7 +176,7 @@ bool MoveAround::loop(Hexes *hexes)
 		// Find color
 		int current_hue = Change::get_current_value(_background_colors[hex_idx]);
 #ifdef MOVE_SAME_BACKGROUND
-		for (int i = 0; i < hexes->num_hexes; i++)
+		for (size_t i = 0; i < hexes->num_hexes; i++)
 		{
 			hex = hexes->get_by_index(i);
 #endif
@@ -233,14 +233,14 @@ bool MoveAround::loop(Hexes *hexes)
 				int hex_index = j == 0 ? _high_intensity_hexes[i].move_change.current : _high_intensity_hexes[i].move_change.next;
 
 				hex = hexes->get_by_index(i);
-				for (int k = 0; k < hex->num_leds; k++)
+				for (size_t k = 0; k < hex->num_leds; k++)
 				{
 					int distance_to_center = get_distance_between_led_and_center(progress, side_angle, hex->get_angle_at_index(k));
 
 					float scaled_proximity = distance_to_center > LOWEST_BRIGTHENESS_CENTER_DISTANCE ? 0 : 1 - (distance_to_center - PEAK_BRIGHTNESS_CENTER_DISTANCE) / (LOWEST_BRIGTHENESS_CENTER_DISTANCE - PEAK_BRIGHTNESS_CENTER_DISTANCE);
 					CHSV background_color = CHSV(Change::get_current_value(_background_colors[hex_index]), BACKGROUND_LIGHTNESS, BACKGROUND_SATURATION);
 					CHSV foreground_color = CHSV(Change::get_current_value(_high_intensity_hexes[i].color_change), MAX_CSHV_VALUE, MAX_CSHV_VALUE);
-					hex->set_at_index(k, Util::fade_towards_color(background_color, foreground_color, scaled_proximity * MAX_CSHV_VALUE));
+					hex->set_at_index(k, Util::fade_towards_color(background_color, foreground_color, scaled_proximity));
 				}
 			}
 		}

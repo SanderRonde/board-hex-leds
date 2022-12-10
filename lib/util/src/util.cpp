@@ -67,24 +67,52 @@ namespace Util
 
 	// Blend one CRGB color toward another CRGB color by a given amount.
 	// Blending is linear, and done in the RGB color space.
-	// This function modifies 'cur' in place.
 	CRGB fade_towards_color(CRGB cur, const CRGB target, uint8_t amount)
 	{
-		cur.red = n_blend_u8_towards_u8(cur.red, target.red, amount);
-		cur.green = n_blend_u8_towards_u8(cur.green, target.green, amount);
-		cur.blue = n_blend_u8_towards_u8(cur.blue, target.blue, amount);
-		return cur;
+		CRGB faded;
+		faded.red = n_blend_u8_towards_u8(cur.red, target.red, amount);
+		faded.green = n_blend_u8_towards_u8(cur.green, target.green, amount);
+		faded.blue = n_blend_u8_towards_u8(cur.blue, target.blue, amount);
+		return faded;
 	}
 
 	// Blend one CHSV color toward another CHSV color by a given amount.
 	// Blending is linear, and done in the HSV color space.
-	// This function modifies 'cur' in place.
 	CHSV fade_towards_color(CHSV cur, const CHSV target, uint8_t amount)
 	{
-		cur.hue = n_blend_u8_towards_u8(cur.hue, target.hue, amount);
-		cur.sat = n_blend_u8_towards_u8(cur.sat, target.sat, amount);
-		cur.val = n_blend_u8_towards_u8(cur.val, target.val, amount);
-		return cur;
+		CHSV faded;
+		faded.hue = n_blend_u8_towards_u8(cur.hue, target.hue, amount);
+		faded.sat = n_blend_u8_towards_u8(cur.sat, target.sat, amount);
+		faded.val = n_blend_u8_towards_u8(cur.val, target.val, amount);
+		return faded;
+	}
+
+	// Blend one CRGB color toward another CRGB color by a given amount.
+	// Blending is linear, and done in the RGB color space.
+	CRGB fade_towards_color(CRGB cur, const CRGB target, float amount)
+	{
+		return fade_towards_color(cur, target, (uint8_t)floor(amount * 256.0));
+	}
+
+	// Blend one CHSV color toward another CHSV color by a given amount.
+	// Blending is linear, and done in the HSV color space.
+	CHSV fade_towards_color(CHSV cur, const CHSV target, float amount)
+	{
+		return fade_towards_color(cur, target, (uint8_t)floor(amount * 256.0));
+	}
+
+	// Blend one CRGB color toward another CRGB color by a given amount.
+	// Blending is linear, and done in the RGB color space.
+	CRGB fade_towards_color(CRGB cur, const CRGB target, double amount)
+	{
+		return fade_towards_color(cur, target, (uint8_t)floor(amount * 256.0));
+	}
+
+	// Blend one CHSV color toward another CHSV color by a given amount.
+	// Blending is linear, and done in the HSV color space.
+	CHSV fade_towards_color(CHSV cur, const CHSV target, double amount)
+	{
+		return fade_towards_color(cur, target, (uint8_t)floor(amount * 256.0));
 	}
 
 	long random_except_range(long min, long max, long except_start, long except_end)

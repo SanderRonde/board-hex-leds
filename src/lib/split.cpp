@@ -71,6 +71,6 @@ namespace Split
 		CRGB current = CHSV(cur_change.current, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 		CRGB next = CHSV(cur_change.next, MAX_CSHV_VALUE, MAX_CSHV_VALUE);
 		double progress = Util::divide(cur_change.progress, cur_change.total);
-		return Util::fade_towards_color(current, next, progress * MAX_CSHV_VALUE);
+		return Util::fade_towards_color(current, next, progress);
 	}
 }

@@ -2,10 +2,10 @@
 
 #include <string.h>
 
-#include <ESP***REMOVED***WiFi.h>
-#include <ESP***REMOVED***WiFiMulti.h>
-#include <ESP***REMOVED***HTTPClient.h>
-#include <ESP***REMOVED***WebServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
 #include <WiFiClient.h>
 
 using namespace std;

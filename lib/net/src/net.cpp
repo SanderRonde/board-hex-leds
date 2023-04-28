@@ -1,9 +1,9 @@
 #include <string.h>
 
-#include <ESP***REMOVED***WiFi.h>
-#include <ESP***REMOVED***WiFiMulti.h>
-#include <ESP***REMOVED***HTTPClient.h>
-#include <ESP***REMOVED***WebServer.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266WebServer.h>
 #include <WiFiClient.h>
 
 #include <net_secrets.h>
@@ -19,7 +19,7 @@ String ipToString(IPAddress ip)
 	return s;
 }
 
-ESP***REMOVED***WiFiMulti WiFiMulti;
+ESP8266WiFiMulti WiFiMulti;
 
 namespace Net
 {

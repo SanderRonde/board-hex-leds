@@ -4,7 +4,7 @@
 #include <telnet.h>
 #include <net.h>
 
-#define TELNET_IP "192.168.1.3"
+#define TELNET_IP "192.168.178.75"
 #define TELNET_PORT 1500
 
 #define RETRY_TIME 30

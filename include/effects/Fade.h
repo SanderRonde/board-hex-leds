@@ -35,6 +35,7 @@ private:
 	std::map<int, float> _led_pos_map;
 
 public:
+	Fade(Hexes* hexes);
 	Fade(Hexes* hexes, RequestObj *request);
 	std::map<int, float> calculate_pos_map(Hexes* hexes);
 	bool loop(Hexes *hexes) override;

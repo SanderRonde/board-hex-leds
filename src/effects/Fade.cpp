@@ -46,6 +46,25 @@ std::map<int, float> Fade::calculate_pos_map(Hexes *hexes)
 	return led_pos_map;
 }
 
+// Default effect
+Fade::Fade(Hexes *hexes) : EffectBase()
+{
+	_direction = FADE_RIGHT;
+	_animate_from = true;
+	_animate_to = true;
+
+	_from_interval_min = 10000;
+	_from_interval_max = 20000;
+	_from_color = Change::set_new_color_target(_from_color, _from_interval_min, _from_interval_max);
+
+	_to_interval_min = 10000;
+	_to_interval_max = 20000;
+	_to_color = Change::set_new_color_target(_to_color, _to_interval_min, _to_interval_max);
+
+	_last_iteration = millis();
+	_led_pos_map = calculate_pos_map(hexes);
+}
+
 Fade::Fade(Hexes *hexes, RequestObj *request) : EffectBase()
 {
 	_direction = parse_direction_str(request->stringv("direction"));

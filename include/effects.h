@@ -1,5 +1,6 @@
 #pragma once
 #include <FastLED.h>
+#include "effects/EffectBase.h"
 #include "api.h"
 #include "hex.h"
 
@@ -37,4 +38,6 @@ namespace Effects
 	void setup(Hexes* hexes);
 
 	void loop();
+
+	void set_effect(EffectBase *new_effect);
 }

@@ -1,4 +1,5 @@
 #include <ArduinoOTA.h>
+#include "effects/Fade.h"
 #include <Arduino.h>
 #include <effects.h>
 #include <config.h>
@@ -33,6 +34,8 @@ void setup()
 	// Done
 	LOGN("Booted");
 	FastLED.showColor(CRGB::Black);
+
+	Effects::set_effect(new Fade(hexes));
 }
 
 void loop()

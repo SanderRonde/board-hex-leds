@@ -1,11 +1,11 @@
 #include <WiFiClient.h>
+#include <secrets.h>
 #include <Arduino.h>
 #include <string.h>
 #include <telnet.h>
 #include <net.h>
 
-#define TELNET_IP "192.168.178.75"
-#define TELNET_PORT 1500
+#define TELNET_PORT 23
 
 #define RETRY_TIME 30
 
@@ -14,7 +14,7 @@ namespace Telnet {
 
 	char* _name = (char*) malloc(sizeof(char) * 50);
 	void connect() {
-		client.connect(TELNET_IP, TELNET_PORT);
+		client.connect(TELNET_BASE_NAME, TELNET_PORT);
 		client.write("set-name:");
 		client.write(_name);
 		client.write("\n");
